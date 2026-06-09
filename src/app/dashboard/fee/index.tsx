@@ -3,7 +3,7 @@ import { Image, Pressable, ScrollView, StatusBar, Text, View } from "react-nativ
 import { SafeAreaView } from "react-native-safe-area-context";
 
 
-export default function Dashboard() {
+export default function Fees() {
     return (
         <SafeAreaView className="flex-1 bg-slate-100" edges={["top", "left", "right"]}>
             <StatusBar backgroundColor="#1E88E5" barStyle="light-content" />
