@@ -1,4 +1,3 @@
-import Footer from "@/components/Footer";
 import { AntDesign, FontAwesome6, Ionicons } from "@expo/vector-icons";
 import { Image, Pressable, ScrollView, StatusBar, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -143,7 +142,6 @@ export default function Dashboard() {
         </View>
       </ScrollView>
 
-      <Footer />
     </SafeAreaView>
   );
 }

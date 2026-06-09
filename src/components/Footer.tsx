@@ -37,18 +37,24 @@ const TABS = [
 export default function Footer() {
   const pathname = usePathname();
 
+  const activeTab = TABS.reduce((bestTab, currentTab) => {
+    const isMatch = pathname === currentTab.route || pathname.startsWith(currentTab.route + "/");
+    if (!isMatch) return bestTab;
+    if (!bestTab) return currentTab;
+    return currentTab.route.length > bestTab.route.length ? currentTab : bestTab;
+  }, null as typeof TABS[number] | null);
+
   return (
     <SafeAreaView
       edges={["bottom"]}
        style={{
         paddingVertical: 0,
-        backgroundColor: "",
       }}
-      className="bg-slate border border-t-1 border-slate-200"
+      className="bg-white border-t border-slate-200"
     >
       <View className="flex-row justify-around items-center px-2 pt-2 pb-1">
         {TABS.map((tab) => {
-          const active = pathname === tab.route || pathname.startsWith(tab.route + "/");
+          const active = activeTab?.route === tab.route;
           return (
             <Pressable
               key={tab.route}

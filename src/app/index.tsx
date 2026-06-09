@@ -11,7 +11,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Dashboard from "./dashboard";
+import { Redirect } from "expo-router";
 
 
 export default function HomeScreen() {
@@ -21,7 +21,7 @@ export default function HomeScreen() {
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const login = true;
   if(login) {
-    return (<Dashboard />)
+    return <Redirect href="/dashboard" />
   }
 
   return (
