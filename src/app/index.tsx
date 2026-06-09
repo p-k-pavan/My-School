@@ -1,98 +1,196 @@
-import * as Device from 'expo-device';
-import { Platform, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Feather, FontAwesome, Ionicons } from "@expo/vector-icons";
+import { useState } from "react";
+import {
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import Dashboard from "./dashboard";
 
-import { AnimatedIcon } from '@/components/animated-icon';
-import { HintRow } from '@/components/hint-row';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { WebBadge } from '@/components/web-badge';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
-
-function getDevMenuHint() {
-  if (Platform.OS === 'web') {
-    return <ThemedText type="small">use browser devtools</ThemedText>;
-  }
-  if (Device.isDevice) {
-    return (
-      <ThemedText type="small">
-        shake device or press <ThemedText type="code">m</ThemedText> in terminal
-      </ThemedText>
-    );
-  }
-  const shortcut = Platform.OS === 'android' ? 'cmd+m (or ctrl+m)' : 'cmd+d';
-  return (
-    <ThemedText type="small">
-      press <ThemedText type="code">{shortcut}</ThemedText>
-    </ThemedText>
-  );
-}
 
 export default function HomeScreen() {
+  const [selectedRole, setSelectedRole] = useState<"student" | "teacher">("student");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+  const login = true;
+  if(login) {
+    return (<Dashboard />)
+  }
+
   return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
-        <ThemedView style={styles.heroSection}>
-          <AnimatedIcon />
-          <ThemedText type="title" style={styles.title}>
-            Welcome to&nbsp;Expo
-          </ThemedText>
-        </ThemedView>
+    <SafeAreaView className="flex-1 bg-white" edges={["top", "left", "right"]}>
 
-        <ThemedText type="code" style={styles.code}>
-          get started
-        </ThemedText>
 
-        <ThemedView type="backgroundElement" style={styles.stepContainer}>
-          <HintRow
-            title="Try editing"
-            hint={<ThemedText type="code">src/app/index.tsx</ThemedText>}
-          />
-          <HintRow title="Dev tools" hint={getDevMenuHint()} />
-          <HintRow
-            title="Fresh start"
-            hint={<ThemedText type="code">npm run reset-project</ThemedText>}
-          />
-        </ThemedView>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        className="flex-1"
+      >
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ flexGrow: 1 }}
+          className="px-6"
+        >
+          <View className="items-center mb-8">
+            <Image
+              source={require("@/assets/images/educonnect-logo.png")}
+              style={{ width: 88, height: 88 }}
+              resizeMode="contain"
+            />
+            <View className="flex-row items-center mt-3">
+              <Text className="text-[28px] font-extrabold text-slate-800">Edu</Text>
+              <Text className="text-[28px] font-extrabold text-blue-600">Connect</Text>
+            </View>
+            <Text className="text-sm font-medium text-slate-400 tracking-wider mt-1">
+              School Management System
+            </Text>
+          </View>
 
-        {Platform.OS === 'web' && <WebBadge />}
-      </SafeAreaView>
-    </ThemedView>
+          <View className="items-center mb-6">
+            <Text className="text-[26px] font-bold text-slate-800 tracking-tight">
+              Welcome Back!
+            </Text>
+            <Text className="text-[15px] font-medium text-slate-400 mt-1.5">
+              Sign in to continue to your account
+            </Text>
+          </View>
+
+          <View className="flex-row bg-slate-100  rounded-[22px] mb-6">
+            <Pressable
+              onPress={() => setSelectedRole("student")}
+              className={`flex-1 flex-row items-center justify-center py-3.5 rounded-[18px] gap-2 ${
+                selectedRole === "student"
+                  ? "bg-white border border-blue-500 shadow-sm"
+                  : ""
+              }`}
+            >
+              <FontAwesome
+                name="graduation-cap"
+                size={16}
+                color={selectedRole === "student" ? "#2563eb" : "#94a3b8"}
+              />
+              <Text
+                className={`text-[15px] font-bold ${
+                  selectedRole === "student" ? "text-blue-600" : "text-slate-400"
+                }`}
+              >
+                Student
+              </Text>
+            </Pressable>
+
+            <Pressable
+              onPress={() => setSelectedRole("teacher")}
+              className={`flex-1 flex-row items-center justify-center py-3.5 rounded-[18px] gap-2 ${
+                selectedRole === "teacher"
+                  ? "bg-white border border-blue-500 shadow-sm"
+                  : ""
+              }`}
+            >
+              <Ionicons
+                name="person"
+                size={16}
+                color={selectedRole === "teacher" ? "#2563eb" : "#94a3b8"}
+              />
+              <Text
+                className={`text-[15px] font-bold ${
+                  selectedRole === "teacher" ? "text-blue-600" : "text-slate-400"
+                }`}
+              >
+                Teacher
+              </Text>
+            </Pressable>
+          </View>
+
+          <View className="gap-4">
+            <View className="flex-row items-center bg-white border border-slate-200 rounded-[22px] px-4 py-4 shadow-sm">
+              <Feather name="mail" size={20} color="#2563eb" className="mr-3" />
+              <TextInput
+                value={email}
+                onChangeText={setEmail}
+                placeholder={selectedRole === "student" ? "Email or Student ID" : "Email or Teacher ID"}
+                placeholderTextColor="#94a3b8"
+                className="flex-1 text-[15px] font-medium text-slate-800 p-0"
+                autoCapitalize="none"
+                keyboardType="email-address"
+              />
+            </View>
+
+
+            <View className="flex-row items-center bg-white border border-slate-200 rounded-[22px] px-4 py-4 shadow-sm">
+              <Feather name="lock" size={20} color="#2563eb" className="mr-3" />
+              <TextInput
+                value={password}
+                onChangeText={setPassword}
+                placeholder="Password"
+                placeholderTextColor="#94a3b8"
+                className="flex-1 text-[15px] font-medium text-slate-800 p-0"
+                secureTextEntry={!isPasswordVisible}
+                autoCapitalize="none"
+              />
+              <Pressable onPress={() => setIsPasswordVisible(!isPasswordVisible)} className="p-1">
+                <Feather
+                  name={isPasswordVisible ? "eye" : "eye-off"}
+                  size={20}
+                  color="#64748b"
+                />
+              </Pressable>
+            </View>
+          </View>
+
+
+          <View className="items-end mt-3 mb-6">
+            <Pressable>
+              <Text className="text-[13px] font-bold text-blue-600">Forgot Password?</Text>
+            </Pressable>
+          </View>
+
+
+          <Pressable className="flex-row items-center justify-center bg-blue-600 rounded-[22px] py-4 shadow-md shadow-blue-200 active:opacity-90">
+            <Feather name="log-in" size={18} color="white" className="mr-2.5" />
+            <Text className="text-white text-[16px] font-bold">Sign In</Text>
+          </Pressable>
+
+
+          <View className="flex-row items-center my-7">
+            <View className="flex-1 h-[1px] bg-slate-200" />
+            <Text className="mx-4 text-[11px] font-bold text-slate-400 tracking-wider">
+              OR CONTINUE WITH
+            </Text>
+            <View className="flex-1 h-[1px] bg-slate-200" />
+          </View>
+
+          <View className="flex-row gap-4 mb-6">
+            <Pressable className="flex-1 flex-row items-center justify-center bg-white border border-slate-200 rounded-[22px] py-4 shadow-sm active:bg-slate-50">
+              <FontAwesome name="google" size={18} color="#ea4335" className="mr-2" />
+              <Text className="text-slate-700 text-[14px] font-bold">Google</Text>
+            </Pressable>
+
+          </View>
+
+        
+          <View className="flex-row items-center justify-center mb-8">
+            <Text className="text-slate-400 text-[14px] font-semibold">Don't have an account? </Text>
+            <Pressable>
+              <Text className="text-blue-600 text-[14px] font-bold">Contact your school</Text>
+            </Pressable>
+          </View>
+
+    
+          <View className="mt-auto items-center">
+            <Image
+              source={require("@/assets/images/school-illustration.png")}
+              style={{ width: "100%", height: 260, alignSelf: "center" }}
+              resizeMode="cover"
+            />
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    flexDirection: 'row',
-  },
-  safeArea: {
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    alignItems: 'center',
-    gap: Spacing.three,
-    paddingBottom: BottomTabInset + Spacing.three,
-    maxWidth: MaxContentWidth,
-  },
-  heroSection: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    gap: Spacing.four,
-  },
-  title: {
-    textAlign: 'center',
-  },
-  code: {
-    textTransform: 'uppercase',
-  },
-  stepContainer: {
-    gap: Spacing.three,
-    alignSelf: 'stretch',
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.four,
-    borderRadius: Spacing.four,
-  },
-});
