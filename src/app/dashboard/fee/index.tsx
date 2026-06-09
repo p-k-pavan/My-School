@@ -1,9 +1,11 @@
 import { AntDesign, FontAwesome, FontAwesome6, Fontisto, Ionicons } from "@expo/vector-icons";
 import { Image, Pressable, ScrollView, StatusBar, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useDrawer } from "@/context/DrawerContext";
 
 
 export default function Fees() {
+    const { openDrawer } = useDrawer();
     return (
         <SafeAreaView className="flex-1 bg-slate-100" edges={["top", "left", "right"]}>
             <StatusBar backgroundColor="#1E88E5" barStyle="light-content" />
@@ -13,7 +15,9 @@ export default function Fees() {
                 {/* ── Header ── */}
                 <View className="bg-[#1E88E5] rounded-b-[32px] flex-row justify-between items-center px-4 pt-10 pb-10">
                     <View className="flex-row gap-3 items-center">
-                        <AntDesign name="menu-unfold" size={24} color="white" />
+                        <Pressable onPress={openDrawer}>
+                            <AntDesign name="menu-unfold" size={24} color="white" />
+                        </Pressable>
                         <View>
                             <Text className="text-[17px] font-bold text-white">John Doe</Text>
                             <Text className="text-[12px] text-white/70 mt-0.5">Class 10A  •  Roll No: 123</Text>
