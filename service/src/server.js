@@ -2,7 +2,9 @@ import express from "express";
 import cors from "cors";
 import cookies from "cookie-parser";
 import dotenv from "dotenv";
+
 import { databaseConnection } from "./config/database.js";
+import errorMiddleware from "./middleware/error.middleware.js";
 
 dotenv.config();
 
@@ -29,3 +31,5 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
+
+app.use(errorMiddleware);

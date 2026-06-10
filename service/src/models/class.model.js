@@ -2,11 +2,23 @@ import mongoose from "mongoose";
 
 const classSchema = new mongoose.Schema(
   {
-   className,
+    className: {
+      type: String,
+      required: true,
+      trim: true,
+    },
 
-  section,
+    section: {
+      type: String,
+      required: true,
+      trim: true,
+    },
 
-  classTeacher
+    classTeacher: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Teacher",
+      default: null,
+    },
   },
   {
     timestamps: true,
