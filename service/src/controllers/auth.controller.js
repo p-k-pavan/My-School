@@ -77,3 +77,30 @@ export const getCurrentUser = asyncHandler(
         });
     }
 );
+
+export const changePassword = asyncHandler(async (req, res) => {
+    const { password, NewPassword } = req.body;
+    const user = await User.findById(req.user.id);
+
+    if (!user) {
+        throw new AppError("User not found", 404);
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+        throw new AppError("Invalid credentials", 401);
+    }
+
+    const hashPassword = await bcrypt.hash(10, NewPassword);
+
+    const updatedPassword = await User.findByIdAndUpdate(user._id, {
+            password: hashedPassword
+        }, { new: true });
+
+        res.status(200).json({
+            message: "Password reset successfully",
+            success: true,
+            error: false
+        });
+
+})
