@@ -2,6 +2,12 @@ import mongoose from "mongoose";
 
 const teacherSchema = new mongoose.Schema(
   {
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+      unique: true,
+    },
     employeeId: {
       type: String,
       required: true,
@@ -58,5 +64,8 @@ const teacherSchema = new mongoose.Schema(
     timestamps: true,
   }
 );
+
+teacherSchema.index({ userId: 1 }, { unique: true });
+teacherSchema.index({ employeeId: 1 }, { unique: true });
 
 export const Teacher = mongoose.model("Teacher", teacherSchema);
