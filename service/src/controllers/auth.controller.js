@@ -46,3 +46,19 @@ export const login = asyncHandler(async (req, res) => {
             },
         });
 });
+
+export const getCurrentUser = asyncHandler(
+  async (req, res) => {
+    const user = await User.findById(req.user.id)
+      .select("-password");
+
+    if (!user) {
+      throw new AppError("User not found", 404);
+    }
+
+    res.status(200).json({
+      success: true,
+      user,
+    });
+  }
+);
