@@ -1,9 +1,8 @@
 import express from "express";
 
-import { bulkUploadClasses, createClass, deleteClass, getAllClasses, getClassById, updateClass } from "../controllers/class.controller.js";
-
 import { isAuthenticated } from "../middleware/TokenVerify.js";
 import { authorizeRoles } from "../middleware/role.middleware.js";
+import { bulkUploadTeacher, createTeacher, deleteTeacher, getAllTeachers, getTeacherById, updateTeacher } from "../controllers/teacher.controller.js";
 
 
 const router = express.Router();
@@ -12,40 +11,40 @@ router.post(
     "/create",
     isAuthenticated,
     authorizeRoles("admin", "management"),
-    createClass
+    createTeacher
 );
 router.post(
     "/bulk-upload",
     isAuthenticated,
     authorizeRoles("admin", "management"),
     upload.single("file"),
-    bulkUploadClasses
+    bulkUploadTeacher
 );
 
 router.get(
     "/get",
     isAuthenticated,
-    authorizeRoles("teacher", "admin", "management"),
-    getAllClasses
+    authorizeRoles("admin", "management"),
+    getAllTeachers
 );
 router.get(
     "/get/:id",
     isAuthenticated,
-    authorizeRoles("teacher", "admin", "management"),
-    getClassById
+    authorizeRoles("admin", "management"),
+    getTeacherById
 );
 
 router.put(
     "/update/:id",
     isAuthenticated,
     authorizeRoles("admin", "management"),
-    updateClass
+    updateTeacher
 );
 router.delete(
     "/delete/:id",
     isAuthenticated,
     authorizeRoles("admin", "management"),
-    deleteClass
+    deleteTeacher
 );
 
 
