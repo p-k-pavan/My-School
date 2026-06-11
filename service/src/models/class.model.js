@@ -25,10 +25,12 @@ const classSchema = new mongoose.Schema(
   }
 );
 
-userSchema.index({ email: 1 }, { unique: true });
-
-userSchema.index({ phoneNumber: 1 }, { unique: true });
-
-userSchema.index({ role: 1 });
+classSchema.index(
+  {
+    className: 1,
+    section: 1,
+  },
+  { unique: true }
+);
 
 export const Class = mongoose.model("Class", classSchema);

@@ -2,6 +2,8 @@ import XLSX from "xlsx";
 import asyncHandler from "../middleware/asyncHandler.js";
 import AppError from "../utils/AppError.js";
 import { Teacher } from "../models/teacher.model.js";
+import { User } from "../models/user.model.js";
+import { generatePassword } from "../utils/genaratePassword.js";
 
 export const createTeacher = asyncHandler(async (req, res) => {
     const {
@@ -43,21 +45,66 @@ export const createTeacher = asyncHandler(async (req, res) => {
         );
     }
 
-    const newTeacher = await Teacher.create({
-        employeeId,
-        teacherName,
-        email,
-        mobile,
-        qualification,
-        joiningDate,
-        assignedClasses,
+    const existingUser = await User.findOne({
+        $or: [
+            { email },
+            { mobile },
+        ],
     });
 
-    res.status(201).json({
-        success: true,
-        message: "Teacher created successfully",
-        teacher: newTeacher,
-    });
+    if (existingUser) {
+        throw new AppError(
+            "User already exists with this email or mobile",
+            409
+        );
+    }
+
+    let newUser = null;
+
+    try {
+        const password =
+            await generatePassword(
+                teacherName,
+                mobile
+            );
+
+        newUser = await User.create({
+            name: teacherName,
+            email,
+            mobile,
+            role: "teacher",
+            password,
+            isPasswordChanged: false,
+        });
+
+        const newTeacher =
+            await Teacher.create({
+                userId: newUser._id,
+                employeeId,
+                teacherName,
+                email,
+                mobile,
+                qualification,
+                joiningDate,
+                assignedClasses:
+                    assignedClasses || [],
+            });
+
+        res.status(201).json({
+            success: true,
+            message:
+                "Teacher created successfully",
+            teacher: newTeacher,
+        });
+    } catch (error) {
+        if (newUser) {
+            await User.findByIdAndDelete(
+                newUser._id
+            );
+        }
+
+        throw error;
+    }
 });
 
 export const bulkUploadTeacher = asyncHandler(async (req, res) => {
@@ -68,48 +115,153 @@ export const bulkUploadTeacher = asyncHandler(async (req, res) => {
         );
     }
 
-    const workbook = XLSX.readFile(req.file.path);
+    const createdTeachers = [];
+    const errors = [];
 
-    const sheetName = workbook.SheetNames[0];
+    try {
+        const workbook = XLSX.readFile(req.file.path);
 
-    const worksheet =
-        workbook.Sheets[sheetName];
+        const sheetName = workbook.SheetNames[0];
 
-    const data = XLSX.utils.sheet_to_json(
-        worksheet
-    );
+        const worksheet = workbook.Sheets[sheetName];
 
-    const teachers = data
-        .filter(
-            (row) =>
-                row.employeeId &&
-                row.teacherName &&
-                row.email &&
-                row.mobile
-        )
-        .map((row) => ({
-            employeeId: row.employeeId,
-            teacherName: row.teacherName,
-            email: row.email,
-            mobile: row.mobile,
-            qualification: row.qualification,
-            joiningDate: row.joiningDate,
-            assignedClasses:
-                row.assignedClasses || [],
-        }));
+        const data =
+            XLSX.utils.sheet_to_json(
+                worksheet
+            );
 
-    await Teacher.insertMany(teachers, {
-        ordered: false,
-    });
+        for (const row of data) {
+            let user = null;
 
-    res.status(201).json({
-        success: true,
-        message:
-            "Teachers uploaded successfully",
-        count: teachers.length,
-    });
-}
-);
+            try {
+                const {
+                    employeeId,
+                    teacherName,
+                    email,
+                    mobile,
+                    qualification,
+                    joiningDate,
+                    assignedClasses,
+                } = row;
+
+                if (
+                    !employeeId ||
+                    !teacherName ||
+                    !email ||
+                    !mobile
+                ) {
+                    errors.push({
+                        employeeId:
+                            employeeId || "N/A",
+                        error:
+                            "Required fields missing",
+                    });
+
+                    continue;
+                }
+
+                const existingTeacher =
+                    await Teacher.findOne({
+                        $or: [
+                            { employeeId },
+                            { email },
+                            { mobile },
+                        ],
+                    });
+
+                if (existingTeacher) {
+                    errors.push({
+                        employeeId,
+                        error:
+                            "Teacher already exists",
+                    });
+
+                    continue;
+                }
+
+                const existingUser =
+                    await User.findOne({
+                        $or: [
+                            { email },
+                            { mobile },
+                        ],
+                    });
+
+                if (existingUser) {
+                    errors.push({
+                        employeeId,
+                        error:
+                            "User already exists with this email or mobile",
+                    });
+
+                    continue;
+                }
+
+                const hashedPassword =
+                    await generatePassword(
+                        teacherName,
+                        mobile
+                    );
+
+                user = await User.create({
+                    name: teacherName,
+                    email,
+                    mobile,
+                    role: "teacher",
+                    password: hashedPassword,
+                    isPasswordChanged: false,
+                });
+
+                const teacher =
+                    await Teacher.create({
+                        userId: user._id,
+                        employeeId,
+                        teacherName,
+                        email,
+                        mobile,
+                        qualification,
+                        joiningDate,
+                        assignedClasses:
+                            assignedClasses || [],
+                    });
+
+                createdTeachers.push(
+                    teacher
+                );
+            } catch (error) {
+                if (user) {
+                    await User.findByIdAndDelete(
+                        user._id
+                    );
+                }
+
+                errors.push({
+                    employeeId:
+                        row.employeeId || "N/A",
+                    error: error.message,
+                });
+            }
+        }
+
+        res.status(201).json({
+            success: true,
+            message:
+                "Bulk upload completed",
+            createdCount:
+                createdTeachers.length,
+            failedCount: errors.length,
+            createdTeachers,
+            errors,
+        });
+    } finally {
+        if (
+            req.file?.path &&
+            fs.existsSync(req.file.path)
+        ) {
+            fs.unlinkSync(req.file.path);
+        }
+    }
+});
 
 export const getAllTeachers = asyncHandler(async (req, res) => {
     const teachers = await Teacher.find()
