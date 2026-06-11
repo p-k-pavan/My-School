@@ -1,9 +1,11 @@
+
+
 import express from "express";
 
 import { isAuthenticated } from "../middleware/TokenVerify.js";
 import { authorizeRoles } from "../middleware/role.middleware.js";
-import { bulkUploadTeacher, createTeacher, deleteTeacher, getAllTeachers, getTeacherById, updateTeacher } from "../controllers/teacher.controller.js";
 import { upload } from "../middleware/multer.js";
+import { bulkUploadStudents, changeStudentStatus, createStudent, getAllStudents, getStudentById, getStudentsByClass, getStudentsByParent, updateStudent } from "../controllers/student.controller.js";
 
 
 const router = express.Router();
@@ -12,40 +14,54 @@ router.post(
     "/create",
     isAuthenticated,
     authorizeRoles("admin", "management"),
-    createTeacher
+    createStudent
 );
 router.post(
     "/bulk-upload",
     isAuthenticated,
     authorizeRoles("admin", "management"),
     upload.single("file"),
-    bulkUploadTeacher
+    bulkUploadStudents
 );
 
 router.get(
     "/get",
     isAuthenticated,
-    authorizeRoles("admin", "management"),
-    getAllTeachers
+    authorizeRoles("teacher", "admin", "management"),
+    getAllStudents
 );
 router.get(
     "/get/:id",
     isAuthenticated,
-    authorizeRoles("admin", "management"),
-    getTeacherById
+    authorizeRoles("teacher", "admin", "management"),
+    getStudentById
+);
+
+router.get(
+    "/class/:classId",
+    isAuthenticated,
+    authorizeRoles("teacher", "admin", "management"),
+    getStudentsByClass
+);
+
+router.get(
+    "/parent/:parentId",
+    isAuthenticated,
+    authorizeRoles("teacher", "admin", "management"),
+    getStudentsByParent
 );
 
 router.put(
     "/update/:id",
     isAuthenticated,
     authorizeRoles("admin", "management"),
-    updateTeacher
+    updateStudent
 );
-router.delete(
-    "/delete/:id",
+router.put(
+    "/status/:id",
     isAuthenticated,
     authorizeRoles("admin", "management"),
-    deleteTeacher
+    changeStudentStatus
 );
 
 

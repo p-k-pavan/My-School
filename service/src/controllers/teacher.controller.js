@@ -1,7 +1,7 @@
 import XLSX from "xlsx";
-import asyncHandler from "../middleware/asyncHandler";
-import AppError from "../utils/AppError";
-import { Teacher } from "../models/teacher.model";
+import asyncHandler from "../middleware/asyncHandler.js";
+import AppError from "../utils/AppError.js";
+import { Teacher } from "../models/teacher.model.js";
 
 export const createTeacher = asyncHandler(async (req, res) => {
     const {

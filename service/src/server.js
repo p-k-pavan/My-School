@@ -9,6 +9,7 @@ import errorMiddleware from "./middleware/error.middleware.js";
 import authRoutes from "./routes/auth.route.js";
 import classRoutes from "./routes/class.route.js"
 import teacherRoutes from "./routes/teacher.route.js"
+import studentRoutes from "./routes/student.route.js"
 
 dotenv.config();
 
@@ -34,6 +35,7 @@ app.get("/", (req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/class", classRoutes);
 app.use("/api/teacher", teacherRoutes);
+app.use("/api/student", studentRoutes)
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

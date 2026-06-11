@@ -4,6 +4,7 @@ import { bulkUploadClasses, createClass, deleteClass, getAllClasses, getClassByI
 
 import { isAuthenticated } from "../middleware/TokenVerify.js";
 import { authorizeRoles } from "../middleware/role.middleware.js";
+import { upload } from "../middleware/multer.js";
 
 
 const router = express.Router();
