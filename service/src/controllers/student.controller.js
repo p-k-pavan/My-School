@@ -2,8 +2,8 @@ import mongoose from "mongoose";
 import { Student } from "../models/student.model.js";
 import { Class } from "../models/class.model.js";
 import { User } from "../models/user.model.js";
-import asyncHandler from "../middlewares/asyncHandler.js";
 import AppError from "../utils/AppError.js";
+import asyncHandler from "../middleware/asyncHandler.js";
 
 export const createStudent = asyncHandler(async (req, res) => {
     const {

@@ -100,8 +100,6 @@ const studentSchema = new mongoose.Schema(
   }
 );
 
-studentSchema.index({ admissionNo: 1 }, { unique: true });
-
 studentSchema.index(
   {
     classId: 1,
