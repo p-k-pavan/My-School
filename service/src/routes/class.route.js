@@ -1,6 +1,6 @@
 import express from "express";
 
-import { bulkUploadClasses, createClass, getAllClasses, getClassById } from "../controllers/class.controller.js";
+import { bulkUploadClasses, createClass, getAllClasses, getClassById, updateClass } from "../controllers/class.controller.js";
 
 import { isAuthenticated } from "../middleware/TokenVerify.js";
 import { authorizeRoles } from "../middleware/role.middleware.js";
@@ -30,6 +30,19 @@ router.get(
 );
 router.get(
     "/get/:id",
+    isAuthenticated,
+    authorizeRoles("teacher", "admin", "management"),
+    getClassById
+);
+
+router.put(
+    "/update/:id",
+    isAuthenticated,
+    authorizeRoles("admin", "management"),
+    updateClass
+);
+router.delete(
+    "/delete/:id",
     isAuthenticated,
     authorizeRoles("teacher", "admin", "management"),
     getClassById

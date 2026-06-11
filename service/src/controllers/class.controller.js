@@ -114,3 +114,63 @@ export const getClassById = asyncHandler(async (req, res) => {
     });
 }
 );
+
+export const updateClass = asyncHandler(async (req, res) => {
+    const { id } = req.params;
+
+    const { className, section, classTeacher } = req.body;
+
+    const klass = await Class.findById(id);
+
+    if (!klass) {
+        throw new AppError(
+            "Class not found",
+            404
+        );
+    }
+
+    if (className && section) {
+        const existingClass = await Class.findOne({
+            className,
+            section,
+            _id: { $ne: id },
+        });
+
+        if (existingClass) {
+            throw new AppError(
+                "Class already exists",
+                409
+            );
+        }
+    }
+
+    klass.className = className || klass.className;
+    klass.section = section || klass.section;
+    klass.classTeacher = classTeacher || klass.classTeacher;
+
+    await klass.save();
+
+    res.status(200).json({
+        success: true,
+        message: "Class successfully updated.",
+        class: klass,
+    });
+});
+
+export const deleteClass = asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const klass = await Class.findByIdAndDelete(id)
+
+    if (!klass) {
+        throw new AppError(
+            "Class not found",
+            404
+        );
+    }
+
+    res.status(200).json({
+        success: true,
+        message: "Class successfully deleted."
+    });
+
+})
