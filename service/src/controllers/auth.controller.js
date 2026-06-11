@@ -33,7 +33,7 @@ export const login = asyncHandler(async (req, res) => {
         .cookie("token", token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
-            sameSite: "strict",
+            sameSite: "none",
             maxAge: 7 * 24 * 60 * 60 * 1000,
         })
         .json({
@@ -47,18 +47,33 @@ export const login = asyncHandler(async (req, res) => {
         });
 });
 
+export const logout = asyncHandler(async (req, res) => {
+    res
+        .cookie("token", "", {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "none",
+            expires: new Date(0),
+        })
+        .status(200)
+        .json({
+            success: true,
+            message: "Logout successful",
+        });
+});
+
 export const getCurrentUser = asyncHandler(
-  async (req, res) => {
-    const user = await User.findById(req.user.id)
-      .select("-password");
+    async (req, res) => {
+        const user = await User.findById(req.user.id)
+            .select("-password");
 
-    if (!user) {
-      throw new AppError("User not found", 404);
+        if (!user) {
+            throw new AppError("User not found", 404);
+        }
+
+        res.status(200).json({
+            success: true,
+            user,
+        });
     }
-
-    res.status(200).json({
-      success: true,
-      user,
-    });
-  }
 );
