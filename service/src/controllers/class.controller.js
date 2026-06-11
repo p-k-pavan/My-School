@@ -77,3 +77,40 @@ export const bulkUploadClasses = asyncHandler(
     }
 );
 
+export const getAllClasses = asyncHandler(async (req, res) => {
+    const classes = await Class.find().populate(
+        "classTeacher",
+        "teacherName email mobile"
+    ).sort({ className: 1, section: 1 });
+
+    res.status(200).json({
+        success: true,
+        message: "Classes fetched successfully",
+        count: classes.length,
+        classes
+    });
+}
+);
+
+export const getClassById = asyncHandler(async (req, res) => {
+    const { id } = req.params;
+
+    const klass = await Class.findById(id).populate(
+        "classTeacher",
+        "teacherName email mobile"
+    );
+
+    if (!klass) {
+        throw new AppError(
+            "Class not found",
+            404
+        );
+    }
+
+    res.status(200).json({
+        success: true,
+        message: "Class fetched successfully",
+        class: klass,
+    });
+}
+);

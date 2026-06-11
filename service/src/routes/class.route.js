@@ -1,6 +1,6 @@
 import express from "express";
 
-import { bulkUploadClasses, createClass } from "../controllers/class.controller.js";
+import { bulkUploadClasses, createClass, getAllClasses, getClassById } from "../controllers/class.controller.js";
 
 import { isAuthenticated } from "../middleware/TokenVerify.js";
 import { authorizeRoles } from "../middleware/role.middleware.js";
@@ -20,6 +20,19 @@ router.post(
   authorizeRoles("admin", "management"),
   upload.single("file"),
   bulkUploadClasses
+);
+
+router.get(
+    "/get",
+    isAuthenticated,
+    authorizeRoles("teacher", "admin", "management"),
+    getAllClasses
+);
+router.get(
+    "/get/:id",
+    isAuthenticated,
+    authorizeRoles("teacher", "admin", "management"),
+    getClassById
 );
 
 
