@@ -5,7 +5,9 @@ import dotenv from "dotenv";
 
 import { databaseConnection } from "./config/database.js";
 import errorMiddleware from "./middleware/error.middleware.js";
+
 import authRoutes from "./routes/auth.route.js";
+import classRoutes from "./routes/class.route.js"
 
 dotenv.config();
 
@@ -29,6 +31,7 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/auth", authRoutes);
+app.use("/api/class",classRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
