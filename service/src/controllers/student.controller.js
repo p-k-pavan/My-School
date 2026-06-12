@@ -191,6 +191,10 @@ export const changeStudentStatus = asyncHandler(async (req, res) => {
 
     await student.save();
 
+    await User.findByIdAndUpdate(student.userId, {
+        status: student.status,
+    });
+
     res.status(200).json({
         success: true,
         message: `Student ${student.status ? "activated" : "deactivated"
