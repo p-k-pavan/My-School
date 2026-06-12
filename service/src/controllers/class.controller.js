@@ -1,4 +1,5 @@
 import XLSX from "xlsx";
+import fs from "fs";
 import asyncHandler from "../middleware/asyncHandler.js";
 import { Class } from "../models/class.model.js";
 import AppError from "../utils/AppError.js";
@@ -39,42 +40,113 @@ export const createClass = asyncHandler(async (req, res) => {
 });
 
 export const bulkUploadClasses = asyncHandler(
-    async (req, res) => {
-        if (!req.file) {
-            throw new AppError(
-                "Excel file is required",
-                400
-            );
-        }
+  async (req, res) => {
+    if (!req.file) {
+      throw new AppError(
+        "Excel file is required",
+        400
+      );
+    }
 
-        const workbook = XLSX.readFile(req.file.path);
+    const errors = [];
+    let successCount = 0;
 
-        const sheetName =
-            workbook.SheetNames[0];
+    try {
+      const workbook = XLSX.readFile(
+        req.file.path
+      );
 
-        const worksheet =
-            workbook.Sheets[sheetName];
+      const sheetName =
+        workbook.SheetNames[0];
 
-        const data = XLSX.utils.sheet_to_json(
-            worksheet
+      const worksheet =
+        workbook.Sheets[sheetName];
+
+      const data =
+        XLSX.utils.sheet_to_json(
+          worksheet
         );
 
-        const classes = data.map((row) => ({
-            className: row.className,
-            section: row.section,
-            classTeacher: row.classTeacher || null,
-        }));
+      for (const [
+        index,
+        row,
+      ] of data.entries()) {
+        try {
+          const {
+            className,
+            section,
+            classTeacher,
+          } = row;
 
-        await Class.insertMany(classes, {
-            ordered: false,
-        });
+          if (
+            !className ||
+            !section
+          ) {
+            errors.push({
+              row: index + 2,
+              error:
+                "Class name and section are required",
+            });
+            continue;
+          }
 
-        res.status(201).json({
-            success: true,
-            message: "Classes uploaded successfully",
-            count: classes.length,
-        });
+          const existingClass =
+            await Class.findOne({
+              className,
+              section,
+            });
+
+          if (existingClass) {
+            errors.push({
+              row: index + 2,
+              error:
+                "Class already exists",
+            });
+            continue;
+          }
+
+          await Class.create({
+            className,
+            section,
+            classTeacher:
+              classTeacher ||
+              null,
+          });
+
+          successCount++;
+        } catch (error) {
+          errors.push({
+            row: index + 2,
+            error:
+              error.message,
+          });
+        }
+      }
+
+      res.status(201).json({
+        success: true,
+        message:
+          "Classes uploaded successfully",
+        totalRecords:
+          data.length,
+        successCount,
+        failedCount:
+          errors.length,
+        errors,
+      });
+    } finally {
+      if (
+        req.file?.path &&
+        fs.existsSync(
+          req.file.path
+        )
+      ) {
+        fs.unlinkSync(
+          req.file.path
+        );
+      }
     }
+  }
 );
 
 export const getAllClasses = asyncHandler(async (req, res) => {
