@@ -1,6 +1,8 @@
 import express from "express";
-import { authorizeRoles } from "../middleware/role.middleware";
-import { isAuthenticated } from "../middleware/TokenVerify";
+import { authorizeRoles } from "../middleware/role.middleware.js";
+import { isAuthenticated } from "../middleware/TokenVerify.js";
+import { bulkUploadAdmissions, createAdmission } from "../controllers/admission.controller.js";
+import { upload } from "../middleware/multer.js";
 
 const router = express.Router();
 
