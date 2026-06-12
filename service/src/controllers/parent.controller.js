@@ -1,7 +1,11 @@
+import XLSX from "xlsx";
+import fs from "fs";
 import asyncHandler from "../middleware/asyncHandler.js";
 import { Parent } from "../models/parent.model.js";
 import { User } from "../models/user.model.js";
 import AppError from "../utils/AppError.js";
+import { generatePassword } from "../utils/genaratePassword.js";
+import mongoose from "mongoose";
 
 export const createParent = asyncHandler(async (req, res) => {
   const {
@@ -74,6 +78,7 @@ export const createParent = asyncHandler(async (req, res) => {
 
     const newParent = await Parent.create({
       userId: newUser._id,
+      email,
       fatherName,
       motherName,
       fatherOccupation,
@@ -173,7 +178,6 @@ export const updateParent = asyncHandler(async (req, res) => {
         address,
         emergencyContact,
         relationWithStudent,
-        status,
     } = req.body;
 
     const parent = await Parent.findById(id);
@@ -229,10 +233,6 @@ export const updateParent = asyncHandler(async (req, res) => {
         relationWithStudent ||
         parent.relationWithStudent;
 
-    if (typeof status === "boolean") {
-        parent.status = status;
-    }
-
     await parent.save();
 
     res.status(200).json({
@@ -276,94 +276,137 @@ export const bulkUploadParents = asyncHandler(
       );
     }
 
-    const workbook = XLSX.readFile(
-      req.file.path
-    );
-
-    const sheetName =
-      workbook.SheetNames[0];
-
-    const worksheet =
-      workbook.Sheets[sheetName];
-
-    const data = XLSX.utils.sheet_to_json(
-      worksheet
-    );
-
+    const errors = [];
     let successCount = 0;
 
-    for (const row of data) {
-      const {
-        fatherName,
-        motherName,
-        phoneNumber,
-        email,
-        address,
-      } = row;
+    try {
+      const workbook = XLSX.readFile(
+        req.file.path
+      );
 
-      if (
-        !fatherName ||
-        !motherName ||
-        !phoneNumber ||
-        !email ||
-        !address
-      ) {
-        continue;
-      }
+      const sheetName =
+        workbook.SheetNames[0];
 
-      const existingUser =
-        await User.findOne({
-          $or: [
-            { email },
-            { mobile: phoneNumber },
-          ],
-        });
+      const worksheet =
+        workbook.Sheets[sheetName];
 
-      if (existingUser) {
-        continue;
-      }
-
-      const password =
-        await generatePassword(
-          motherName,
-          phoneNumber
+      const data =
+        XLSX.utils.sheet_to_json(
+          worksheet
         );
 
-      const user = await User.create({
-        name: motherName,
-        email,
-        mobile: phoneNumber,
-        password,
-        role: "parent",
-        isPasswordChanged: false,
-      });
+      for (const [
+        index,
+        row,
+      ] of data.entries()) {
+        try {
+          const {
+            fatherName,
+            motherName,
+            phoneNumber,
+            email,
+            address,
+          } = row;
 
-      await Parent.create({
-        userId: user._id,
-        fatherName,
-        motherName,
-        phoneNumber,
-        address,
-        fatherOccupation:
-          row.fatherOccupation,
-        motherOccupation:
-          row.motherOccupation,
-        alternatePhoneNumber:
-          row.alternatePhoneNumber,
-        emergencyContact:
-          row.emergencyContact,
-        relationWithStudent:
-          row.relationWithStudent,
-      });
+          if (
+            !fatherName ||
+            !motherName ||
+            !phoneNumber ||
+            !email ||
+            !address
+          ) {
+            errors.push({
+              row: index + 2,
+              error:
+                "Required fields are missing",
+            });
+            continue;
+          }
 
-      successCount++;
+          const existingUser =
+            await User.findOne({
+              $or: [
+                { email },
+                {
+                  mobile:
+                    phoneNumber,
+                },
+              ],
+            });
+
+          if (existingUser) {
+            errors.push({
+              row: index + 2,
+              error:
+                "User already exists",
+            });
+            continue;
+          }
+
+          const password =
+            await generatePassword(
+              motherName,
+              phoneNumber
+            );
+
+          const user =
+            await User.create({
+              name: motherName,
+              email,
+              mobile:
+                phoneNumber,
+              password,
+              role: "parent",
+              isPasswordChanged:
+                false,
+            });
+
+          await Parent.create({
+            userId: user._id,
+            fatherName,
+            motherName,
+            email,
+            phoneNumber,
+            address,
+            fatherOccupation:
+              row.fatherOccupation,
+            motherOccupation:
+              row.motherOccupation,
+            alternatePhoneNumber:
+              row.alternatePhoneNumber,
+            emergencyContact:
+              row.emergencyContact,
+            relationWithStudent:
+              row.relationWithStudent,
+          });
+
+          successCount++;
+        } catch (error) {
+          errors.push({
+            row: index + 2,
+            error: error.message,
+          });
+        }
+      }
+
+      res.status(201).json({
+        success: true,
+        message:
+          "Parents uploaded successfully",
+        totalRecords: data.length,
+        successCount,
+        failedCount: errors.length,
+        errors,
+      });
+    } finally {
+      if (
+        req.file?.path &&
+        fs.existsSync(req.file.path)
+      ) {
+        fs.unlinkSync(
+          req.file.path
+        );
+      }
     }
-
-    res.status(201).json({
-      success: true,
-      message:
-        "Parents uploaded successfully",
-      count: successCount,
-    });
   }
 );
