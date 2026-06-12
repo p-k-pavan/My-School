@@ -2,20 +2,20 @@ import express from "express";
 
 import { isAuthenticated } from "../middleware/TokenVerify.js";
 import { authorizeRoles } from "../middleware/role.middleware.js";
-import { bulkUploadTeacher, createTeacher, deleteTeacher, getAllTeachers, getTeacherById, updateTeacher } from "../controllers/teacher.controller.js";
+import { assignClassesToTeacher, bulkUploadTeacher, changeTeacherStatus, createTeacher, getAllTeachers, getTeacherById, getTeacherClasses, removeClassFromTeacher, updateTeacher } from "../controllers/teacher.controller.js";
 import { upload } from "../middleware/multer.js";
 
 
 const router = express.Router();
 
 router.post(
-    "/create",
+    "/",
     isAuthenticated,
     authorizeRoles("admin", "management"),
     createTeacher
 );
 router.post(
-    "/bulk-upload",
+    "/upload",
     isAuthenticated,
     authorizeRoles("admin", "management"),
     upload.single("file"),
@@ -23,31 +23,59 @@ router.post(
 );
 
 router.get(
-    "/get",
+    "/",
     isAuthenticated,
     authorizeRoles("admin", "management"),
     getAllTeachers
 );
 router.get(
-    "/get/:id",
+    "/:id",
     isAuthenticated,
     authorizeRoles("admin", "management"),
     getTeacherById
 );
 
 router.put(
-    "/update/:id",
+    "/:id",
     isAuthenticated,
     authorizeRoles("admin", "management"),
     updateTeacher
 );
-router.delete(
-    "/delete/:id",
+
+router.put(
+    "/:id/status",
     isAuthenticated,
-    authorizeRoles("admin", "management"),
-    deleteTeacher
+    authorizeRoles(
+        "admin",
+        "management"
+    ),
+    changeTeacherStatus
 );
 
+router.put(
+    "/:id/assign-classes",
+    isAuthenticated,
+    authorizeRoles(
+        "admin",
+        "management"
+    ),
+    assignClassesToTeacher
+);
 
+router.put(
+    "/:id/remove-class/:classId",
+    isAuthenticated,
+    authorizeRoles(
+        "admin",
+        "management"
+    ),
+    removeClassFromTeacher
+);
+
+router.get(
+    "/:id/classes",
+    isAuthenticated,
+    getTeacherClasses
+);
 
 export default router;
