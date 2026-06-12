@@ -26,12 +26,6 @@ const studentSchema = new mongoose.Schema(
       required: true,
     },
 
-    section: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-
     rollNo: {
       type: Number,
       required: true,
@@ -42,10 +36,20 @@ const studentSchema = new mongoose.Schema(
       required: true,
     },
 
+    academicYear: {
+      type: String,
+      required: true,
+    },
+
     gender: {
       type: String,
       enum: ["Male", "Female", "Other"],
       required: true,
+    },
+
+    aadhaarNumber: {
+      type: String,
+      trim: true,
     },
 
     bloodGroup: {
@@ -67,21 +71,9 @@ const studentSchema = new mongoose.Schema(
       trim: true,
     },
 
-    fatherName: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-
-    motherName: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-
     parentId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      ref: "Parent",
       required: true,
     },
 
@@ -103,7 +95,6 @@ const studentSchema = new mongoose.Schema(
 studentSchema.index(
   {
     classId: 1,
-    section: 1,
     rollNo: 1,
   },
   { unique: true }

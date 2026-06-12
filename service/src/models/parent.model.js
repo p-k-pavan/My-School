@@ -41,11 +41,48 @@ const parentSchema = new mongoose.Schema(
         phoneNumber: {
             type: String,
             required: true,
+            unique: true,
             trim: true,
         },
 
         alternatePhoneNumber: {
             type: String,
+            trim: true,
+        },
+
+        guardianName: {
+            type: String,
+            trim: true,
+            default: ""
+        },
+
+        guardianRelation: {
+            type: String,
+            trim: true,
+            default: ""
+        },
+
+        annualIncome: {
+            type: Number,
+            required: true,
+            min: 0,
+        },
+
+        state: {
+            type: String,
+            required: true,
+            trim: true,
+        },
+
+        pincode: {
+            type: String,
+            required: true,
+            trim: true,
+        },
+
+        city: {
+            type: String,
+            required: true,
             trim: true,
         },
 
@@ -55,16 +92,12 @@ const parentSchema = new mongoose.Schema(
             trim: true,
         },
 
-        emergencyContact: {
-            type: String,
-            trim: true,
-        },
-
-        relationWithStudent: {
-            type: String,
-            enum: ["Father", "Mother", "Guardian"],
-            default: "Father",
-        },
+        studentIds: [
+            {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "Student",
+            },
+        ],
 
         status: {
             type: Boolean,

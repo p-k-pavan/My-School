@@ -1,115 +1,13 @@
 import mongoose from "mongoose";
+import XLSX from "xlsx";
+import fs from "fs";
 import { Student } from "../models/student.model.js";
 import { Class } from "../models/class.model.js";
 import { User } from "../models/user.model.js";
 import AppError from "../utils/AppError.js";
 import asyncHandler from "../middleware/asyncHandler.js";
+import { Parent } from "../models/parent.model.js";
 
-export const createStudent = asyncHandler(async (req, res) => {
-    const {
-        admissionNo,
-        studentName,
-        profilePhoto,
-        classId,
-        section,
-        rollNo,
-        dob,
-        gender,
-        bloodGroup,
-        address,
-        fatherName,
-        motherName,
-        parentId,
-        joiningDate,
-    } = req.body;
-
-
-    if (
-        !admissionNo ||
-        !studentName ||
-        !classId ||
-        !section ||
-        !rollNo ||
-        !dob ||
-        !gender ||
-        !fatherName ||
-        !motherName ||
-        !parentId
-    ) {
-        throw new AppError("Please provide all required fields", 400);
-    }
-
-    if (!mongoose.Types.ObjectId.isValid(classId)) {
-        throw new AppError("Invalid Class ID", 400);
-    }
-
-    if (!mongoose.Types.ObjectId.isValid(parentId)) {
-        throw new AppError("Invalid Parent ID", 400);
-    }
-
-    const existingAdmission = await Student.findOne({ admissionNo });
-
-    if (existingAdmission) {
-        throw new AppError("Admission number already exists", 400);
-    }
-
-    const classExists = await Class.findById(classId);
-
-    if (!classExists) {
-        throw new AppError("Class not found", 404);
-    }
-
-    const parentExists = await User.findById(parentId);
-
-    if (!parentExists) {
-        throw new AppError("Parent not found", 404);
-    }
-
-    const existingRollNo = await Student.findOne({
-        classId,
-        section,
-        rollNo,
-    });
-
-    if (existingRollNo) {
-        throw new AppError(
-            `Roll No ${rollNo} already exists in Section ${section}`,
-            400
-        );
-    }
-
-    const birthDate = new Date(dob);
-
-    if (birthDate > new Date()) {
-        throw new AppError(
-            "Date of birth cannot be a future date",
-            400
-        );
-    }
-
-    const student = await Student.create({
-        admissionNo,
-        studentName,
-        profilePhoto,
-        classId,
-        section,
-        rollNo,
-        dob,
-        gender,
-        bloodGroup,
-        address,
-        fatherName,
-        motherName,
-        parentId,
-        joiningDate,
-    });
-
-    res.status(201).json({
-        success: true,
-        message: "Student created successfully",
-        data: student,
-    });
-});
 
 export const getAllStudents = asyncHandler(async (req, res) => {
     const {
@@ -254,13 +152,19 @@ export const updateStudent = asyncHandler(async (req, res) => {
     const { id } = req.params;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
-        throw new AppError("Invalid student ID", 400);
+        throw new AppError(
+            "Invalid student ID",
+            400
+        );
     }
 
     const student = await Student.findById(id);
 
     if (!student) {
-        throw new AppError("Student not found", 404);
+        throw new AppError(
+            "Student not found",
+            404
+        );
     }
 
     const {
@@ -268,170 +172,138 @@ export const updateStudent = asyncHandler(async (req, res) => {
         studentName,
         profilePhoto,
         classId,
-        section,
         rollNo,
         dob,
         gender,
         bloodGroup,
-        address,
-        fatherName,
-        motherName,
+        aadhaarNumber,
+        academicYear,
         parentId,
-        joiningDate,
+        joiningDate
     } = req.body;
 
-    if (admissionNo && admissionNo !== student.admissionNo) {
-        const existingStudent = await Student.findOne({
-            admissionNo,
-            _id: { $ne: id },
-        });
+    if (
+        admissionNo &&
+        admissionNo !== student.admissionNo
+    ) {
+        const existingStudent =
+            await Student.findOne({
+                admissionNo,
+                _id: { $ne: id },
+            });
 
         if (existingStudent) {
-            throw new AppError("Admission number already exists", 400);
-        }
-    }
-
-    if (rollNo || classId || section) {
-        const existingRoll = await Student.findOne({
-            classId: classId || student.classId,
-            section: section || student.section,
-            rollNo: rollNo || student.rollNo,
-            _id: { $ne: id },
-        });
-
-        if (existingRoll) {
             throw new AppError(
-                "Roll number already exists in this class and section",
-                400
+                "Admission number already exists",
+                409
             );
         }
     }
 
-    const updatedStudent = await Student.findByIdAndUpdate(
-        id,
-        {
-            admissionNo,
-            studentName,
-            profilePhoto,
-            classId,
-            section,
-            rollNo,
-            dob,
-            gender,
-            bloodGroup,
-            address,
-            fatherName,
-            motherName,
-            parentId,
-            joiningDate,
-        },
-        {
-            new: true,
-            runValidators: true,
+    if (
+        aadhaarNumber &&
+        aadhaarNumber !==
+        student.aadhaarNumber
+    ) {
+        const existingStudent =
+            await Student.findOne({
+                aadhaarNumber,
+                _id: { $ne: id },
+            });
+
+        if (existingStudent) {
+            throw new AppError(
+                "Aadhaar number already exists",
+                409
+            );
         }
-    )
-        .populate("classId", "className")
-        .populate("parentId", "name email phone");
+    }
+
+    if (
+        rollNo !== undefined ||
+        classId !== undefined
+    ) {
+        const existingRoll =
+            await Student.findOne({
+                classId:
+                    classId ||
+                    student.classId,
+                rollNo:
+                    rollNo ||
+                    student.rollNo,
+                _id: { $ne: id },
+            });
+
+        if (existingRoll) {
+            throw new AppError(
+                "Roll number already exists in this class",
+                409
+            );
+        }
+    }
+
+    if (admissionNo !== undefined)
+        student.admissionNo =
+            admissionNo;
+
+    if (studentName !== undefined)
+        student.studentName =
+            studentName;
+
+    if (profilePhoto !== undefined)
+        student.profilePhoto =
+            profilePhoto;
+
+    if (classId !== undefined)
+        student.classId = classId;
+
+    if (rollNo !== undefined)
+        student.rollNo = rollNo;
+
+    if (dob !== undefined)
+        student.dob = dob;
+
+    if (gender !== undefined)
+        student.gender = gender;
+
+    if (bloodGroup !== undefined)
+        student.bloodGroup =
+            bloodGroup;
+
+    if (aadhaarNumber !== undefined)
+        student.aadhaarNumber =
+            aadhaarNumber;
+
+    if (academicYear !== undefined)
+        student.academicYear =
+            academicYear;
+
+    if (parentId !== undefined)
+        student.parentId =
+            parentId;
+
+    if (joiningDate !== undefined)
+        student.joiningDate =
+            joiningDate;
+
+
+    await student.save();
+
+    const updatedStudent =
+        await Student.findById(id)
+            .populate(
+                "classId",
+                "className section"
+            )
+            .populate(
+                "parentId",
+                "fatherName motherName phoneNumber"
+            );
 
     res.status(200).json({
         success: true,
-        message: "Student updated successfully",
+        message:
+            "Student updated successfully",
         student: updatedStudent,
-    });
-});
-
-export const bulkUploadStudents = asyncHandler(async (req, res) => {
-    const { students } = req.body;
-
-    if (!students || !Array.isArray(students) || students.length === 0) {
-        throw new AppError("Students data is required", 400);
-    }
-
-    const errors = [];
-    const validStudents = [];
-
-    for (let i = 0; i < students.length; i++) {
-        const student = students[i];
-
-        const {
-            admissionNo,
-            studentName,
-            classId,
-            section,
-            rollNo,
-            dob,
-            gender,
-            fatherName,
-            motherName,
-            parentId,
-        } = student;
-
-        if (
-            !admissionNo ||
-            !studentName ||
-            !classId ||
-            !section ||
-            !rollNo ||
-            !dob ||
-            !gender ||
-            !fatherName ||
-            !motherName ||
-            !parentId
-        ) {
-            errors.push({
-                row: i + 1,
-                admissionNo,
-                error: "Missing required fields",
-            });
-            continue;
-        }
-
-        if (
-            !mongoose.Types.ObjectId.isValid(classId) ||
-            !mongoose.Types.ObjectId.isValid(parentId)
-        ) {
-            errors.push({
-                row: i + 1,
-                admissionNo,
-                error: "Invalid Class ID or Parent ID",
-            });
-            continue;
-        }
-
-        validStudents.push(student);
-    }
-
-    const admissionNumbers = validStudents.map(
-        (student) => student.admissionNo
-    );
-
-    const existingStudents = await Student.find({
-        admissionNo: { $in: admissionNumbers },
-    }).select("admissionNo");
-
-    const existingAdmissionNos = existingStudents.map(
-        (student) => student.admissionNo
-    );
-
-    const studentsToInsert = validStudents.filter(
-        (student) =>
-            !existingAdmissionNos.includes(student.admissionNo)
-    );
-
-    const insertedStudents = await Student.insertMany(
-        studentsToInsert,
-        {
-            ordered: false,
-        }
-    );
-
-    res.status(201).json({
-        success: true,
-        message: "Bulk upload completed",
-        insertedCount: insertedStudents.length,
-        failedCount: errors.length,
-        skippedCount:
-            validStudents.length - insertedStudents.length,
-        errors,
     });
 });

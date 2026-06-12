@@ -5,24 +5,10 @@ import express from "express";
 import { isAuthenticated } from "../middleware/TokenVerify.js";
 import { authorizeRoles } from "../middleware/role.middleware.js";
 import { upload } from "../middleware/multer.js";
-import { bulkUploadStudents, changeStudentStatus, createStudent, getAllStudents, getStudentById, getStudentsByClass, getStudentsByParent, updateStudent } from "../controllers/student.controller.js";
+import {  changeStudentStatus, getAllStudents, getStudentById, getStudentsByClass, getStudentsByParent, updateStudent } from "../controllers/student.controller.js";
 
 
 const router = express.Router();
-
-router.post(
-    "/create",
-    isAuthenticated,
-    authorizeRoles("admin", "management"),
-    createStudent
-);
-router.post(
-    "/bulk-upload",
-    isAuthenticated,
-    authorizeRoles("admin", "management"),
-    upload.single("file"),
-    bulkUploadStudents
-);
 
 router.get(
     "/get",
@@ -63,7 +49,5 @@ router.put(
     authorizeRoles("admin", "management"),
     changeStudentStatus
 );
-
-
 
 export default router;
