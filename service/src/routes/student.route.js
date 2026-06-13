@@ -11,13 +11,13 @@ import {  changeStudentStatus, getAllStudents, getStudentById, getStudentsByClas
 const router = express.Router();
 
 router.get(
-    "/get",
+    "/",
     isAuthenticated,
     authorizeRoles("teacher", "admin", "management"),
     getAllStudents
 );
 router.get(
-    "/get/:id",
+    "/:id",
     isAuthenticated,
     authorizeRoles("teacher", "admin", "management"),
     getStudentById
@@ -38,13 +38,13 @@ router.get(
 );
 
 router.put(
-    "/update/:id",
+    "/:id",
     isAuthenticated,
     authorizeRoles("admin", "management"),
     updateStudent
 );
 router.put(
-    "/status/:id",
+    "/:id/status",
     isAuthenticated,
     authorizeRoles("admin", "management"),
     changeStudentStatus

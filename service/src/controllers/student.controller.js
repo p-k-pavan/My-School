@@ -38,8 +38,8 @@ export const getAllStudents = asyncHandler(async (req, res) => {
     const totalStudents = await Student.countDocuments(query);
 
     const students = await Student.find(query)
-        .populate("classId", "className")
-        .populate("parentId", "name email phone")
+        .populate("classId", "className section")
+        .populate("parentId", "email phoneNumber fatherName motherName")
         .sort({ rollNo: 1 })
         .skip((page - 1) * limit)
         .limit(Number(limit));
@@ -62,8 +62,8 @@ export const getStudentById = asyncHandler(async (req, res) => {
     }
 
     const student = await Student.findById(id)
-        .populate("classId", "className")
-        .populate("parentId", "name email phone");
+        .populate("classId", "className section")
+        .populate("parentId", "email phoneNumber fatherName motherName")
 
     if (!student) {
         throw new AppError("Student not found", 404);
@@ -103,21 +103,19 @@ export const changeStudentStatus = asyncHandler(async (req, res) => {
 
 export const getStudentsByClass = asyncHandler(async (req, res) => {
     const { classId } = req.params;
-    const { section } = req.query;
 
     if (!mongoose.Types.ObjectId.isValid(classId)) {
         throw new AppError("Invalid class ID", 400);
     }
 
-    const query = { classId };
-
-    if (section) {
-        query.section = section;
-    }
-
-    const students = await Student.find(query)
-        .populate("classId", "className")
-        .populate("parentId", "name email phone")
+    const students = await Student.find({
+        classId,
+    })
+        .populate("classId", "className section")
+        .populate(
+            "parentId",
+            "email phoneNumber fatherName motherName"
+        )
         .sort({ rollNo: 1 });
 
     res.status(200).json({
@@ -136,8 +134,11 @@ export const getStudentsByParent = asyncHandler(async (req, res) => {
     }
 
     const students = await Student.find({ parentId })
-        .populate("classId", "className")
-        .populate("parentId", "name email phone")
+        .populate("classId", "className section")
+        .populate(
+            "parentId",
+            "email phoneNumber fatherName motherName"
+        )
         .sort({ studentName: 1 });
 
     res.status(200).json({
