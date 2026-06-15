@@ -63,13 +63,7 @@ export default function Login() {
         try {
             const res = await login(formData).unwrap();
             console.log(res);
-            dispatch(
-                loginAction({
-                    name: res.user.name,
-                    role: res.user.role,
-                    email: res.user?.email,
-                }),
-            );
+            dispatch(loginAction(res.user),);
             toast.success("Login successful");
             navigate("/dashboard");
         } catch (err) {
