@@ -9,12 +9,21 @@ import {
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { toast } from "sonner";
+import { useLoginMutation } from "@/redux/api/auth";
+import { useDispatch } from "react-redux";
+import { useNavigate } from "react-router";
+import { login as loginAction } from "@/redux/reducer/authReducer";
 
 export default function Login() {
+    const navigate = useNavigate();
+  const dispatch = useDispatch();
+
     const [formData, setFormData] = useState({
         email: "",
         password: "",
     });
+
+    const [login, { isLoading }] = useLoginMutation();
 
     const handleChange = (e) => {
         const { id, value } = e.target;
@@ -44,14 +53,46 @@ export default function Login() {
     };
 
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
 
         if (!validateForm()) {
             return;
         }
 
-        console.log("Login submitted");
+        try {
+            const res = await login(formData).unwrap();
+            console.log(res);
+            dispatch(
+                loginAction({
+                    name: res.user.name,
+                    role: res.user.role,
+                    email: res.user?.email,
+                }),
+            );
+            toast.success("Login successful");
+            navigate("/dashboard");
+        } catch (err) {
+            console.log(err);
+            let errorMessage = "Something went wrong";
+
+            if (err.status) {
+                switch (err.status) {
+                    case 401:
+                        errorMessage = "Invalid email or password";
+                        break;
+                    case 404:
+                        errorMessage = "Email not registred";
+                        break;
+                    case 500:
+                        errorMessage = "Something went wrong";
+                        break;
+                    default:
+                        errorMessage = "Something went wrong";
+                }
+            }
+            toast.error(errorMessage);
+        }
     };
 
     return (
@@ -104,6 +145,7 @@ export default function Login() {
                             variant="link"
                             className="h-auto p-0 text-sm font-normal text-muted-foreground hover:text-primary text-end cursor-pointer"
                             type="button"
+                            disabled={isLoading}
                         >
                             Forgot Password?
                         </Button>
@@ -111,6 +153,7 @@ export default function Login() {
                         <Button
                             type="submit"
                             className="px-8 cursor-pointer"
+                            disabled={isLoading}
                         >
                             Login
                         </Button>
