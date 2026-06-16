@@ -10,7 +10,7 @@ import { combineReducers } from "redux";
 
 import authReducer from "./reducer/authReducer";
 import { authApi } from "./api/auth";
-// import themeReducer from "./reducer/themeReducer";
+import { admissionApi } from "./api/admissions";
 
 
 const persistConfig = {
@@ -20,9 +20,9 @@ const persistConfig = {
 };
 
 const rootReducer = combineReducers({
-//   theme: themeReducer,
   auth: authReducer,
   [authApi.reducerPath]: authApi.reducer,
+  [admissionApi.reducerPath]:admissionApi.reducer,
 });
 
 const persistedReducer = persistReducer( persistConfig,rootReducer );
@@ -42,7 +42,8 @@ export const store =
           ],
         },
       })
-      .concat(authApi.middleware),
+      .concat(authApi.middleware)
+      .concat(admissionApi.middleware)
   });
 
 export const persistor = persistStore(store);

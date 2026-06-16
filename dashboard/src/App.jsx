@@ -4,6 +4,8 @@ import DashBoard from "./pages/dashboard"
 import ProtectedRoute from './layout/ProtectedRoute'
 import RedirectIfAuthenticated from './layout/RedirectIfAuthenticated'
 import Layout from './layout/Layout'
+import Admissions from './pages/Admission/admissions'
+import AdmissionForm from './pages/Admission/AdmissionForm'
 
 function App() {
   return (
@@ -17,6 +19,8 @@ function App() {
 
           <Route element={<ProtectedRoute />}>
             <Route path="/dashboard" element={<DashBoard />} />
+            <Route path='/admissions' element={<Admissions />} />
+            <Route path="/admissions/new" element={<AdmissionForm />} />
           </Route>
 
         </Routes>
