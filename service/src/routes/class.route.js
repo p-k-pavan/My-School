@@ -10,13 +10,14 @@ import { upload } from "../middleware/multer.js";
 const router = express.Router();
 
 router.post(
-    "/create",
+    "/",
     isAuthenticated,
     authorizeRoles("admin", "management"),
     createClass
 );
+
 router.post(
-    "/bulk-upload",
+    "/upload",
     isAuthenticated,
     authorizeRoles("admin", "management"),
     upload.single("file"),
@@ -24,26 +25,28 @@ router.post(
 );
 
 router.get(
-    "/get",
+    "/",
     isAuthenticated,
     authorizeRoles("teacher", "admin", "management"),
     getAllClasses
 );
+
 router.get(
-    "/get/:id",
+    "/:id",
     isAuthenticated,
     authorizeRoles("teacher", "admin", "management"),
     getClassById
 );
 
 router.put(
-    "/update/:id",
+    "/:id",
     isAuthenticated,
     authorizeRoles("admin", "management"),
     updateClass
 );
+
 router.delete(
-    "/delete/:id",
+    "/:id",
     isAuthenticated,
     authorizeRoles("admin", "management"),
     deleteClass
