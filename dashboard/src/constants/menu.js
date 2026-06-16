@@ -11,7 +11,8 @@ import {
   LuBell,
   LuBuilding2,
   LuUserCheck,
-  LuGalleryThumbnails
+  LuGalleryThumbnails,
+  LuCalendar
 } from "react-icons/lu";
 
 export const menus = [
