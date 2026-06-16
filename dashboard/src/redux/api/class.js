@@ -1,7 +1,4 @@
-import {
-    createApi,
-    fetchBaseQuery,
-} from "@reduxjs/toolkit/query/react";
+import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
 export const classApi = createApi({
     reducerPath: "classApi",
@@ -30,7 +27,7 @@ export const classApi = createApi({
                 formData.append("file", file);
 
                 return {
-                    url: "/admissions/upload",
+                    url: "/class/upload",
                     method: "POST",
                     body: formData,
                 };
@@ -38,37 +35,40 @@ export const classApi = createApi({
             invalidatesTags: ["Class"],
         }),
 
-        getClass: builder.mutation({
+        getClass: builder.query({
             query: () => "/class",
             providesTags: ["Class"],
         }),
 
-        getClassById: builder.mutation({
+        getClassById: builder.query({
             query: (id) => `/class/${id}`,
             providesTags: ["Class"],
         }),
 
         updateClass: builder.mutation({
-            query: (formData,id) => ({
+            query: ({ id, formData }) => ({
                 url: `/class/${id}`,
-                method: "put",
+                method: "PUT",
                 body: formData,
             }),
             invalidatesTags: ["Class"],
         }),
 
         deleteClass: builder.mutation({
-      query: (id) => ({
-        url: `/class/${id}`,
-        method: "DELETE",
-      }),
-      invalidatesTags: ["Class"],
-    }),
-
+            query: (id) => ({
+                url: `/class/${id}`,
+                method: "DELETE",
+            }),
+            invalidatesTags: ["Class"],
+        }),
     }),
 });
 
 export const {
-    
-
+    useCreateClassMutation,
+    useBulkUploadClassMutation,
+    useGetClassQuery,
+    useGetClassByIdQuery,
+    useUpdateClassMutation,
+    useDeleteClassMutation,
 } = classApi;
