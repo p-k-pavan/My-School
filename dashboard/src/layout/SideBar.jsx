@@ -14,7 +14,7 @@ const Sidebar = () => {
     };
 
     return (
-        <div className="fixed bottom-0 start-0 top-0 z-40 hidden w-64 transform overflow-y-auto border border-e border-gray-200 bg-white pb-10 pt-7 duration-300 dark:border-gray-700 dark:bg-neutral-800 lg:bottom-0 lg:end-auto lg:block lg:translate-x-0">
+        <div className="fixed bottom-0 insert-s-0 top-0 z-40 hidden w-64 transform overflow-y-auto border border-e border-gray-200 bg-white pb-10 pt-7 duration-300 dark:border-gray-700 dark:bg-neutral-800 lg:bottom-0 lg:insert-e-auto lg:block lg:translate-x-0">
             <div className="px-6">
                 <Link
                     className="flex-none text-xl font-semibold text-black focus:opacity-80 focus:outline-none dark:text-white"
