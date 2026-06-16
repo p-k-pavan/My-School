@@ -41,8 +41,8 @@ const Sidebar = () => {
                                     <NavLink
                                         className={({ isActive }) =>
                                             isActive
-                                                ? "flex items-center gap-x-3.5 rounded-lg bg-black px-2.5 py-2 text-sm font-semibold text-white hover:bg-black hover:text-white"
-                                                : "flex items-center gap-x-3.5 rounded-lg px-2.5 py-2 text-sm font-semibold text-black hover:bg-black hover:text-white"
+                                                ? "flex items-center gap-x-3.5 rounded-lg bg-black px-2.5 py-2 text-sm font-semibold text-white hover:bg-black hover:text-white dark:bg-white dark:text-black dark:hover:bg-white dark:hover:text-black"
+                                                : "flex items-center gap-x-3.5 rounded-lg px-2.5 py-2 text-sm font-semibold text-black hover:bg-black hover:text-white dark:text-neutral-300 dark:hover:bg-neutral-700 dark:hover:text-white"
                                         }
                                         to={menu.path}
                                     >
