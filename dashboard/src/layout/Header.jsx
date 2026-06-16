@@ -7,6 +7,7 @@ import {
     LuX,
     LuSun,
     LuMoon,
+    LuSlidersHorizontal,
 } from "react-icons/lu";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
@@ -14,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { menus } from "@/constants/menu";
 import { useTheme } from "next-themes";
 
-const Header = () => {
+const Header = ({ onToggleSidebar }) => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const { user } = useSelector((state) => state.auth);
@@ -45,15 +46,24 @@ const Header = () => {
         navigate("/profile");
     };
 
+    const handleToggle = () => {
+        if (window.innerWidth < 1024) {
+            setMenuOpen(!menuOpen);
+        } else if (onToggleSidebar) {
+            onToggleSidebar();
+        }
+    };
+
     return (
         <>
             <header className="sticky top-0 z-50 flex w-full items-center justify-between bg-white p-4 shadow-md dark:bg-neutral-800 dark:text-neutral-300">
                 <div className="flex items-center gap-2">
                     <Button
-                        onClick={() => setMenuOpen(!menuOpen)}
-                        className="text-xl lg:hidden"
+                        variant="none"
+                        onClick={handleToggle}
+                        className="rounded-full p-2 text-xl hover:bg-gray-100 dark:hover:bg-neutral-700 text-gray-700 dark:text-neutral-300 cursor-pointer"
                     >
-                        {menuOpen ? <LuX /> : <LuMenu />}
+                        {menuOpen ? <LuX /> : <LuSlidersHorizontal />}
                     </Button>
                 </div>
 
