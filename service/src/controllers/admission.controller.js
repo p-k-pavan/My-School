@@ -47,8 +47,6 @@ export const createAdmission = asyncHandler(
             !admissionNo ||
             !studentName ||
             !classId ||
-            !section ||
-            !rollNo ||
             !dob ||
             !gender ||
             !phoneNumber ||
@@ -85,20 +83,6 @@ export const createAdmission = asyncHandler(
         if (existingAadhaar) {
             throw new AppError(
                 "Aadhaar number already exists",
-                409
-            );
-        }
-
-        const existingRoll =
-            await Student.findOne({
-                classId,
-                section,
-                rollNo,
-            });
-
-        if (existingRoll) {
-            throw new AppError(
-                "Roll number already exists in this class",
                 409
             );
         }
@@ -194,8 +178,6 @@ export const createAdmission = asyncHandler(
                     profilePhoto,
 
                     classId,
-                    section,
-                    rollNo,
 
                     dob,
                     gender,

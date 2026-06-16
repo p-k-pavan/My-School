@@ -1,12 +1,11 @@
 import PageHeading from "@/layout/PageHeading";
-import { useState } from "react";
-import { useSelector } from "react-redux";
-import { useNavigate } from "react-router";
 
+import { useState } from "react";
+import { useNavigate } from "react-router";
+import BulkUploadDialog from "./BulkUpload";
 
 export default function Admissions() {
-    const [openAddModal, setOpenAddModal] = useState();
-    const [openUploadModal, setOpenUploadModal] = useState();
+    const [openUploadModal, setOpenUploadModal] = useState(false);
 
     const navigate = useNavigate();
 
@@ -21,6 +20,10 @@ export default function Admissions() {
                 onBulkUpload={() => setOpenUploadModal(true)}
             />
 
+            <BulkUploadDialog
+                open={openUploadModal}
+                onClose={() => setOpenUploadModal(false)}
+            />
         </>
     );
 }

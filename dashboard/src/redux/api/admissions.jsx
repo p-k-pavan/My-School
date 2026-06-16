@@ -30,7 +30,7 @@ export const admissionApi = createApi({
                 formData.append("file", file);
 
                 return {
-                    url: "/admission/upload",
+                    url: "/admissions/upload",
                     method: "POST",
                     body: formData,
                 };

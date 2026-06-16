@@ -28,7 +28,6 @@ const studentSchema = new mongoose.Schema(
 
     rollNo: {
       type: Number,
-      required: true,
     },
 
     dob: {
@@ -92,12 +91,5 @@ const studentSchema = new mongoose.Schema(
   }
 );
 
-studentSchema.index(
-  {
-    classId: 1,
-    rollNo: 1,
-  },
-  { unique: true }
-);
 
 export const Student = mongoose.model("Student", studentSchema);
