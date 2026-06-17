@@ -14,6 +14,7 @@ router.post(
     authorizeRoles("admin", "management"),
     createTeacher
 );
+
 router.post(
     "/upload",
     isAuthenticated,
@@ -28,6 +29,7 @@ router.get(
     authorizeRoles("admin", "management"),
     getAllTeachers
 );
+
 router.get(
     "/:id",
     isAuthenticated,
