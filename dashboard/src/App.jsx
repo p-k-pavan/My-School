@@ -9,6 +9,7 @@ import AdmissionForm from './pages/Admission/AdmissionForm'
 import Classes from './pages/Classes'
 import Teachers from './pages/Teachers'
 import Parents from './pages/Parents'
+import Students from './pages/Students'
 
 function App() {
   return (
@@ -27,6 +28,7 @@ function App() {
             <Route path="/classes" element={<Classes />} />
             <Route path="/teachers" element={<Teachers />} />
             <Route path="/parents" element={<Parents />} />
+            <Route path="/students" element={<Students />} />
           </Route>
 
         </Routes>

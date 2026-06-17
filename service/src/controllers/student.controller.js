@@ -22,9 +22,22 @@ export const getAllStudents = asyncHandler(async (req, res) => {
     const query = {};
 
     if (search) {
+        const matchingParents = await Parent.find({
+            $or: [
+                { fatherName: { $regex: search, $options: "i" } },
+                { motherName: { $regex: search, $options: "i" } },
+                { guardianName: { $regex: search, $options: "i" } },
+                { email: { $regex: search, $options: "i" } },
+                { phoneNumber: { $regex: search, $options: "i" } },
+            ]
+        }).select("_id");
+
+        const parentIds = matchingParents.map(p => p._id);
+
         query.$or = [
             { studentName: { $regex: search, $options: "i" } },
             { admissionNo: { $regex: search, $options: "i" } },
+            { parentId: { $in: parentIds } },
         ];
     }
 
