@@ -27,6 +27,7 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { useCreateClassMutation, useUpdateClassMutation } from "@/redux/api/class";
+import { useGetTeachersQuery } from "@/redux/api/teacher";
 
 export default function ClassDialog({ open, onClose, classData }) {
     const isEdit = !!classData;
@@ -36,6 +37,15 @@ export default function ClassDialog({ open, onClose, classData }) {
         section: "",
         classTeacher: "",
     });
+
+    const {
+        data,
+        Loading,
+        error,
+    } = useGetTeachersQuery();
+
+    const teachers = data.teachers;
+
 
     const [errors, setErrors] = useState({});
 
@@ -47,18 +57,18 @@ export default function ClassDialog({ open, onClose, classData }) {
     useEffect(() => {
         if (open) {
             if (classData) {
-                // If editing, populate form data
+
                 const teacherId = typeof classData.classTeacher === "object" && classData.classTeacher !== null
                     ? classData.classTeacher._id
                     : classData.classTeacher || "";
-                
+
                 setFormData({
                     className: classData.className ? String(classData.className) : "",
                     section: classData.section || "",
                     classTeacher: teacherId,
                 });
             } else {
-                // If creating, reset form data
+
                 setFormData({
                     className: "",
                     section: "",
@@ -88,7 +98,7 @@ export default function ClassDialog({ open, onClose, classData }) {
             e.preventDefault();
         }
 
-        
+
         const validation = classSchema.safeParse(formData);
 
         if (!validation.success) {
@@ -198,18 +208,37 @@ export default function ClassDialog({ open, onClose, classData }) {
                     </Field>
 
                     <Field invalid={!!errors.classTeacher}>
-                        <FieldLabel htmlFor="classTeacher">Class Teacher ID</FieldLabel>
-                        <Input
-                            id="classTeacher"
+                        <FieldLabel htmlFor="classTeacher">
+                            Class Teacher
+                        </FieldLabel>
+
+                        <Select
                             value={formData.classTeacher}
-                            onChange={(e) => updateField("classTeacher", e.target.value)}
-                            placeholder="e.g. 507f1f77bcf86cd799439011"
-                            aria-invalid={!!errors.classTeacher}
-                        />
-                        <p className="text-xs text-muted-foreground mt-1">
-                            Enter the 24-character database ID of the teacher. Leave blank if none.
-                        </p>
-                        <FieldError>{errors.classTeacher}</FieldError>
+                            onValueChange={(value) =>
+                                updateField("classTeacher", value)}
+                        >
+                            <SelectTrigger
+                                aria-invalid={!!errors.classTeacher}
+                            >
+                                <SelectValue placeholder="Select Class Teacher" />
+                            </SelectTrigger>
+
+                            <SelectContent>
+                                {teachers?.map((teacher) => (
+                                    <SelectItem
+                                        key={teacher._id}
+                                        value={teacher._id}
+                                    >
+                                        {teacher.teacherName}
+                                    </SelectItem>
+                                )
+                                )}
+                            </SelectContent>
+                        </Select>
+
+                        <FieldError>
+                            {errors.classTeacher}
+                        </FieldError>
                     </Field>
 
                     <DialogFooter className="flex items-center justify-end gap-2 pt-4">
