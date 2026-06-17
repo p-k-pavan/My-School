@@ -1,7 +1,7 @@
 import { Edit3, UserCheck, UserX, School } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-export default function TeacherTable({ teachers, onEdit, onToggleStatus, isTogglingStatus }) {
+export default function TeacherTable({ teachers, onEdit, onToggleStatus, isTogglingStatus, onManageClasses }) {
     return (
         <div className="border border-border rounded-xl bg-card overflow-hidden shadow-2xs">
             <div className="overflow-x-auto">
@@ -99,22 +99,33 @@ export default function TeacherTable({ teachers, onEdit, onToggleStatus, isToggl
                                         {formattedDate}
                                     </td>
                                     <td className="whitespace-nowrap px-6 py-4 text-sm">
-                                        {teacher.assignedClasses && teacher.assignedClasses.length > 0 ? (
-                                            <div className="flex flex-wrap gap-1 max-w-[200px]">
-                                                {teacher.assignedClasses.map((cls) => (
-                                                    <span
-                                                        key={cls._id}
-                                                        className="inline-flex items-center px-1.5 py-0.5 rounded bg-muted text-xs font-medium text-foreground border border-border/50"
-                                                    >
-                                                        {cls.className}-{cls.section}
-                                                    </span>
-                                                ))}
-                                            </div>
-                                        ) : (
-                                            <span className="text-muted-foreground italic text-xs">
-                                                None
-                                            </span>
-                                        )}
+                                        <div className="flex items-center gap-2">
+                                            {teacher.assignedClasses && teacher.assignedClasses.length > 0 ? (
+                                                <div className="flex flex-wrap gap-1 max-w-50">
+                                                    {teacher.assignedClasses.map((cls) => (
+                                                        <span
+                                                            key={cls._id}
+                                                            className="inline-flex items-center px-1.5 py-0.5 rounded bg-muted text-xs font-medium text-foreground border border-border/50"
+                                                        >
+                                                            {cls.className}-{cls.section}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <span className="text-muted-foreground italic text-xs">
+                                                    None
+                                                </span>
+                                            )}
+                                            <Button
+                                                variant="ghost"
+                                                size="icon-xs"
+                                                onClick={() => onManageClasses(teacher)}
+                                                className="cursor-pointer text-primary hover:bg-primary/10"
+                                                title="Manage Assignments"
+                                            >
+                                                <School className="h-3.5 w-3.5" />
+                                            </Button>
+                                        </div>
                                     </td>
                                     <td className="whitespace-nowrap px-6 py-4">
                                         <span

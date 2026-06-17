@@ -2,7 +2,7 @@ import { Edit3, Mail, Phone, GraduationCap, Calendar, UserCheck, UserX, School }
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 
-export default function TeacherGrid({ teachers, onEdit, onToggleStatus, isTogglingStatus }) {
+export default function TeacherGrid({ teachers, onEdit, onToggleStatus, isTogglingStatus, onManageClasses }) {
     return (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {teachers.map((teacher) => {
@@ -18,7 +18,8 @@ export default function TeacherGrid({ teachers, onEdit, onToggleStatus, isToggli
                 return (
                     <Card
                         key={teacher._id}
-                        className="group border border-border/80 bg-card hover:border-primary/40 hover:shadow-md transition-all duration-300 flex flex-col justify-between"
+                        className="group border border-border/80 bg-card hover:border-primary/40 hover:shadow-md transition-all 
+                        duration-300 flex flex-col justify-between"
                     >
                         <CardHeader className="flex flex-row items-start justify-between pb-3">
                             <div className="space-y-1">
@@ -62,12 +63,19 @@ export default function TeacherGrid({ teachers, onEdit, onToggleStatus, isToggli
                                 </div>
                             </div>
 
-                            {/* Assigned Classes badges */}
                             {teacher.assignedClasses && teacher.assignedClasses.length > 0 ? (
                                 <div className="pt-2 border-t border-border/50">
-                                    <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 flex items-center gap-1">
-                                        <School className="h-3 w-3" />
-                                        Assigned Classes
+                                    <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 flex items-center justify-between">
+                                        <div className="flex items-center gap-1">
+                                            <School className="h-3 w-3" />
+                                            Assigned Classes
+                                        </div>
+                                        <button
+                                            onClick={() => onManageClasses(teacher)}
+                                            className="text-primary hover:underline font-semibold text-xs flex items-center gap-0.5 cursor-pointer"
+                                        >
+                                            Manage
+                                        </button>
                                     </div>
                                     <div className="flex flex-wrap gap-1">
                                         {teacher.assignedClasses.map((cls) => (
@@ -81,10 +89,16 @@ export default function TeacherGrid({ teachers, onEdit, onToggleStatus, isToggli
                                     </div>
                                 </div>
                             ) : (
-                                <div className="pt-2 border-t border-border/50">
+                                <div className="pt-2 border-t border-border/50 flex items-center justify-between">
                                     <div className="text-xs text-muted-foreground italic">
                                         No classes assigned
                                     </div>
+                                    <button
+                                        onClick={() => onManageClasses(teacher)}
+                                        className="text-primary hover:underline font-semibold text-xs cursor-pointer"
+                                    >
+                                        Assign
+                                    </button>
                                 </div>
                             )}
                         </CardContent>

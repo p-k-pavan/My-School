@@ -111,9 +111,6 @@ export default function TeacherDialog({ open, onClose, teacherData }) {
 
         setErrors({});
 
-        // Prepare request body.
-        // For updates, the backend only takes teacherName, mobile, email, qualification, joiningDate.
-        // For create, employeeId is also required.
         const payload = {
             employeeId: formData.employeeId.trim(),
             teacherName: formData.teacherName.trim(),
@@ -125,7 +122,6 @@ export default function TeacherDialog({ open, onClose, teacherData }) {
 
         try {
             if (isEdit) {
-                // Remove employeeId from payload for update since backend doesn't update it
                 const { employeeId, ...updatePayload } = payload;
                 const response = await updateTeacher({
                     id: teacherData._id,

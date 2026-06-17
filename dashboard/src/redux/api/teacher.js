@@ -67,6 +67,28 @@ export const teacherApi = createApi({
             }),
             invalidatesTags: ["Teacher"],
         }),
+
+        assignClass: builder.mutation({
+            query: ({ id, assignedClasses }) => ({
+                url: `/teacher/${id}/assign-classes`,
+                method: "PUT",
+                body: { assignedClasses },
+            }),
+            invalidatesTags: ["Teacher"],
+        }),
+
+        removeAssignClass: builder.mutation({
+            query: ({ id, classId }) => ({
+                url: `/teacher/${id}/remove-class/${classId}`,
+                method: "PUT",
+            }),
+            invalidatesTags: ["Teacher"],
+        }),
+
+        getTeacherAssignClasses: builder.query({
+            query: (id) => `/teacher/${id}/classes`,
+            providesTags: ["Teacher"],
+        }),
     }),
 });
 
@@ -78,4 +100,7 @@ export const {
     useGetTeacherClassesQuery,
     useUpdateTeacherMutation,
     useUpdateTeacherStatusMutation,
+    useAssignClassMutation,
+    useRemoveAssignClassMutation,
+    useGetTeacherAssignClassesQuery
 } = teacherApi;

@@ -7,10 +7,10 @@ import { Button } from "@/components/ui/button";
 
 import {
     useGetTeachersQuery,
-    useCreateTeacherMutation,
-    useBulkUploadTeacherMutation,
-    useUpdateTeacherMutation,
     useUpdateTeacherStatusMutation,
+    useGetTeacherAssignClassesQuery,
+    useAssignClassMutation,
+    useRemoveAssignClassMutation,
 } from "@/redux/api/teacher";
 
 import TeacherStats from "@/components/teachers/TeacherStats";
@@ -20,6 +20,7 @@ import TeacherGrid from "@/components/teachers/TeacherGrid";
 import TeacherTable from "@/components/teachers/TeacherTable";
 import TeacherDialog from "@/components/teachers/TeacherDialog";
 import TeacherBulkUploadDialog from "@/components/teachers/TeacherBulkUpload";
+import AssignClassesDialog from "@/components/teachers/AssignClassesDialog";
 
 export default function Teachers() {
     const [viewMode, setViewMode] = useState("grid");
@@ -30,12 +31,37 @@ export default function Teachers() {
     const [openUploadModal, setOpenUploadModal] = useState(false);
     const [selectedTeacher, setSelectedTeacher] = useState(null);
 
+    // Class assignment states
+    const [openAssignClassesDialog, setOpenAssignClassesDialog] = useState(false);
+    const [assignClassesTeacher, setAssignClassesTeacher] = useState(null);
+
     const { data, isLoading, error } = useGetTeachersQuery();
     const [updateTeacherStatus, { isLoading: isUpdatingStatus }] = useUpdateTeacherStatusMutation();
 
+    // Assignment hooks
+    const teacherIdForClasses = assignClassesTeacher?._id;
+    const {
+        data: assignedClassesData,
+        isLoading: isLoadingAssignedClasses,
+    } = useGetTeacherAssignClassesQuery(
+        teacherIdForClasses,
+        {
+            skip: !teacherIdForClasses,
+        }
+    );
+
+    const [
+        assignClass,
+        { isLoading: isAssigningClass }
+    ] = useAssignClassMutation();
+
+    const [
+        removeAssignClass,
+        { isLoading: isRemovingAssignClass }
+    ] = useRemoveAssignClassMutation();
+
     const teachersList = data?.teachers || [];
 
-    // Filter teachers by search query and status filter
     const filteredTeachers = teachersList.filter((teacher) => {
         // Status filter
         if (statusFilter === "active" && !teacher.status) return false;
@@ -83,6 +109,41 @@ export default function Teachers() {
             toast.success(response.message || `Teacher ${!teacher.status ? "activated" : "deactivated"} successfully`);
         } catch (err) {
             toast.error(err?.data?.message || "Failed to update teacher status");
+            console.error(err);
+        }
+    };
+
+    const handleManageClasses = (teacher) => {
+        setAssignClassesTeacher(teacher);
+        setOpenAssignClassesDialog(true);
+    };
+
+    const handleAssignClass = async (classId) => {
+        try {
+            const currentClassIds = assignedClassesData?.classes?.map((c) => c._id) || [];
+            const updatedClassIds = [...currentClassIds, classId];
+            const response = await assignClass({
+                id: assignClassesTeacher._id,
+                assignedClasses: updatedClassIds,
+            }).unwrap();
+            
+            toast.success(response.message || "Class assigned successfully");
+        } catch (err) {
+            toast.error(err?.data?.message || "Failed to assign class");
+            console.error(err);
+        }
+    };
+
+    const handleRemoveClass = async (classId) => {
+        try {
+            const response = await removeAssignClass({
+                id: assignClassesTeacher._id,
+                classId,
+            }).unwrap();
+            
+            toast.success(response.message || "Class removed successfully");
+        } catch (err) {
+            toast.error(err?.data?.message || "Failed to remove class");
             console.error(err);
         }
     };
@@ -161,6 +222,7 @@ export default function Teachers() {
                     onEdit={handleEdit}
                     onToggleStatus={handleToggleStatus}
                     isTogglingStatus={isUpdatingStatus}
+                    onManageClasses={handleManageClasses}
                 />
             ) : (
                 <TeacherTable
@@ -168,6 +230,7 @@ export default function Teachers() {
                     onEdit={handleEdit}
                     onToggleStatus={handleToggleStatus}
                     isTogglingStatus={isUpdatingStatus}
+                    onManageClasses={handleManageClasses}
                 />
             )}
 
@@ -181,7 +244,21 @@ export default function Teachers() {
                 open={openUploadModal}
                 onClose={() => setOpenUploadModal(false)}
             />
+
+            <AssignClassesDialog
+                open={openAssignClassesDialog}
+                onClose={() => {
+                    setOpenAssignClassesDialog(false);
+                    setAssignClassesTeacher(null);
+                }}
+                teacher={assignClassesTeacher}
+                assignedClasses={assignedClassesData?.classes || []}
+                isLoadingAssigned={isLoadingAssignedClasses}
+                onAssign={handleAssignClass}
+                onRemove={handleRemoveClass}
+                isAssigning={isAssigningClass}
+                isRemoving={isRemovingAssignClass}
+            />
         </div>
     );
 }
-
