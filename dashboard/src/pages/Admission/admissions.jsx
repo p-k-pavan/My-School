@@ -2,7 +2,7 @@ import PageHeading from "@/layout/PageHeading";
 
 import { useState } from "react";
 import { useNavigate } from "react-router";
-import BulkUploadDialog from "./BulkUpload";
+import BulkUploadDialog from "../../components/admissions/BulkUpload";
 
 export default function Admissions() {
     const [openUploadModal, setOpenUploadModal] = useState(false);

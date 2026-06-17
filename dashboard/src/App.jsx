@@ -6,6 +6,7 @@ import RedirectIfAuthenticated from './layout/RedirectIfAuthenticated'
 import Layout from './layout/Layout'
 import Admissions from './pages/Admission/admissions'
 import AdmissionForm from './pages/Admission/AdmissionForm'
+import Classes from './pages/Classes'
 
 function App() {
   return (
@@ -21,6 +22,7 @@ function App() {
             <Route path="/dashboard" element={<DashBoard />} />
             <Route path='/admissions' element={<Admissions />} />
             <Route path="/admissions/new" element={<AdmissionForm />} />
+            <Route path="/classes" element={<Classes />} />
           </Route>
 
         </Routes>
