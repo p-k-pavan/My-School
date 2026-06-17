@@ -11,10 +11,12 @@ export const getAllParents = asyncHandler(async (req, res) => {
     const page = Number(req.query.page) || 1;
     const limit = Number(req.query.limit) || 10;
     const search = req.query.search?.trim() || "";
+    const status = req.query.status;
     const skip = (page - 1) * limit;
 
-    const matchStage = search ? {
-        $or: [
+    const matchStage = {};
+    if (search) {
+        matchStage.$or = [
             {
                 fatherName: { $regex: search, $options: "i", },
             },
@@ -27,9 +29,39 @@ export const getAllParents = asyncHandler(async (req, res) => {
             {
                 email: { $regex: search, $options: "i", },
             },
-        ],
+        ];
     }
-        : {};
+    if (status === "active") {
+        matchStage.status = true;
+    } else if (status === "inactive") {
+        matchStage.status = false;
+    }
+
+    const aggMatch = {};
+    if (search) {
+        aggMatch.$or = [
+            {
+                fatherName: { $regex: search, $options: "i" },
+            },
+            {
+                motherName: { $regex: search, $options: "i" },
+            },
+            {
+                phoneNumber: { $regex: search, $options: "i" },
+            },
+            {
+                email: { $regex: search, $options: "i" },
+            },
+            {
+                "students.studentName": { $regex: search, $options: "i" },
+            },
+        ];
+    }
+    if (status === "active") {
+        aggMatch.status = true;
+    } else if (status === "inactive") {
+        aggMatch.status = false;
+    }
 
     const parents =
         await Parent.aggregate([
@@ -43,26 +75,7 @@ export const getAllParents = asyncHandler(async (req, res) => {
             },
 
             {
-                $match: search ? {
-                    $or: [
-                        {
-                            fatherName: { $regex: search, $options: "i" },
-                        },
-                        {
-                            motherName: { $regex: search, $options: "i" },
-                        },
-                        {
-                            phoneNumber: { $regex: search, $options: "i" },
-                        },
-                        {
-                            email: { $regex: search, $options: "i" },
-                        },
-                        {
-                            "students.studentName": { $regex: search, $options: "i" },
-                        },
-                    ],
-                }
-                    : {},
+                $match: aggMatch,
             },
             {
                 $sort: { createdAt: -1 },
@@ -72,6 +85,8 @@ export const getAllParents = asyncHandler(async (req, res) => {
         ]);
 
     const totalRecords = await Parent.countDocuments(matchStage);
+    const totalActive = await Parent.countDocuments({ status: true });
+    const totalInactive = await Parent.countDocuments({ status: false });
 
     res.status(200).json({
         success: true,
@@ -82,6 +97,8 @@ export const getAllParents = asyncHandler(async (req, res) => {
             currentPage: page,
             totalPages: Math.ceil(totalRecords / limit),
             limit,
+            totalActive,
+            totalInactive,
         },
     });
 }

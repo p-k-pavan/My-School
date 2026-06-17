@@ -13,6 +13,7 @@ import { authApi } from "./api/auth";
 import { admissionApi } from "./api/admissions";
 import { classApi } from "./api/class";
 import { teacherApi } from "./api/teacher";
+import { parentApi } from "./api/parent";
 
 
 const persistConfig = {
@@ -26,7 +27,8 @@ const rootReducer = combineReducers({
   [authApi.reducerPath]: authApi.reducer,
   [admissionApi.reducerPath]:admissionApi.reducer,
   [classApi.reducerPath]:classApi.reducer,
-  [teacherApi.reducerPath]:teacherApi.reducer
+  [teacherApi.reducerPath]:teacherApi.reducer,
+  [parentApi.reducerPath]: parentApi.reducer
 });
 
 const persistedReducer = persistReducer( persistConfig,rootReducer );
@@ -50,6 +52,7 @@ export const store =
       .concat(admissionApi.middleware)
       .concat(classApi.middleware)
       .concat(teacherApi.middleware)
+      .concat(parentApi.middleware)
   });
 
 export const persistor = persistStore(store);

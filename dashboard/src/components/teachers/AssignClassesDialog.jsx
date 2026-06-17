@@ -33,13 +33,11 @@ export default function AssignClassesDialog({
 }) {
     const [selectedClassId, setSelectedClassId] = useState("");
 
-    // Fetch all classes in the school system
     const { data: allClassesData, isLoading: isLoadingAllClasses } = useGetClassQuery(undefined, {
         skip: !open,
     });
     const classesList = allClassesData?.classes || [];
 
-    // Filter out classes that are already assigned to this teacher
     const assignedIds = new Set(assignedClasses.map((cls) => cls._id));
     const availableClasses = classesList.filter((cls) => !assignedIds.has(cls._id));
 

@@ -9,26 +9,26 @@ import { changeParentStatus, getAllParents, getParentById, updateParent } from "
 const router = express.Router();
 
 router.get(
-    "/get",
+    "/",
     isAuthenticated,
     authorizeRoles("admin", "management"),
     getAllParents
 );
 router.get(
-    "/get/:id",
+    "/:id",
     isAuthenticated,
     authorizeRoles("admin", "management"),
     getParentById
 );
 
 router.put(
-    "/update/:id",
+    "/:id",
     isAuthenticated,
     authorizeRoles("admin", "management"),
     updateParent
 );
 router.put(
-    "/status/:id",
+    "/:id/status",
     isAuthenticated,
     authorizeRoles("admin", "management"),
     changeParentStatus
