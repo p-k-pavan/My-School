@@ -7,6 +7,7 @@ import Layout from './layout/Layout'
 import Admissions from './pages/Admission/admissions'
 import AdmissionForm from './pages/Admission/AdmissionForm'
 import Classes from './pages/Classes'
+import Teachers from './pages/Teachers'
 
 function App() {
   return (
@@ -23,6 +24,7 @@ function App() {
             <Route path='/admissions' element={<Admissions />} />
             <Route path="/admissions/new" element={<AdmissionForm />} />
             <Route path="/classes" element={<Classes />} />
+            <Route path="/teachers" element={<Teachers />} />
           </Route>
 
         </Routes>

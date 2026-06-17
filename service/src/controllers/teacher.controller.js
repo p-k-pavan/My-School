@@ -337,7 +337,7 @@ export const updateTeacher = asyncHandler(
 
         if (existingTeacher) {
             throw new AppError(
-                "Teacher already exists",
+                "Email or Number already exsit",
                 409
             );
         }

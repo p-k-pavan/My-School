@@ -5,38 +5,38 @@ import { Class } from "../models/class.model.js";
 import AppError from "../utils/AppError.js";
 
 export const createClass = asyncHandler(async (req, res) => {
-    const { className, section, classTeacher } = req.body;
+  const { className, section, classTeacher } = req.body;
 
-    if (!className || !section) {
-        throw new AppError(
-            "Class name and section are required",
-            400
-        );
-    }
+  if (!className || !section) {
+    throw new AppError(
+      "Class name and section are required",
+      400
+    );
+  }
 
-    const existingClass = await Class.findOne({
-        className,
-        section,
-    });
+  const existingClass = await Class.findOne({
+    className,
+    section,
+  });
 
-    if (existingClass) {
-        throw new AppError(
-            "Class already exists",
-            409
-        );
-    }
+  if (existingClass) {
+    throw new AppError(
+      "Class already exists",
+      409
+    );
+  }
 
-    const newClass = await Class.create({
-        className,
-        section,
-        classTeacher,
-    });
+  const newClass = await Class.create({
+    className,
+    section,
+    classTeacher,
+  });
 
-    res.status(201).json({
-        success: true,
-        message: "Class created successfully",
-        class: newClass,
-    });
+  res.status(201).json({
+    success: true,
+    message: "Class created successfully",
+    class: newClass,
+  });
 });
 
 export const bulkUploadClasses = asyncHandler(
@@ -150,99 +150,101 @@ export const bulkUploadClasses = asyncHandler(
 );
 
 export const getAllClasses = asyncHandler(async (req, res) => {
-    const classes = await Class.find().populate(
-        "classTeacher",
-        "teacherName email mobile"
-    ).sort({ className: 1, section: 1 });
+  const classes = await Class.find().populate(
+    "classTeacher",
+    "teacherName email mobile"
+  ).sort({ className: 1, section: 1 });
 
-    res.status(200).json({
-        success: true,
-        message: "Classes fetched successfully",
-        count: classes.length,
-        classes
-    });
+  res.status(200).json({
+    success: true,
+    message: "Classes fetched successfully",
+    count: classes.length,
+    classes
+  });
 }
 );
 
 export const getClassById = asyncHandler(async (req, res) => {
-    const { id } = req.params;
+  const { id } = req.params;
 
-    const klass = await Class.findById(id).populate(
-        "classTeacher",
-        "teacherName email mobile"
+  const klass = await Class.findById(id).populate(
+    "classTeacher",
+    "teacherName email mobile"
+  );
+
+  if (!klass) {
+    throw new AppError(
+      "Class not found",
+      404
     );
+  }
 
-    if (!klass) {
-        throw new AppError(
-            "Class not found",
-            404
-        );
-    }
-
-    res.status(200).json({
-        success: true,
-        message: "Class fetched successfully",
-        class: klass,
-    });
+  res.status(200).json({
+    success: true,
+    message: "Class fetched successfully",
+    class: klass,
+  });
 }
 );
 
 export const updateClass = asyncHandler(async (req, res) => {
-    const { id } = req.params;
+  const { id } = req.params;
 
-    const { className, section, classTeacher } = req.body;
+  const { className, section, classTeacher } = req.body;
 
-    const klass = await Class.findById(id);
+  const klass = await Class.findById(id);
 
-    if (!klass) {
-        throw new AppError(
-            "Class not found",
-            404
-        );
-    }
+  if (!klass) {
+    throw new AppError(
+      "Class not found",
+      404
+    );
+  }
 
-    if (className && section) {
-        const existingClass = await Class.findOne({
-            className,
-            section,
-            _id: { $ne: id },
-        });
-
-        if (existingClass) {
-            throw new AppError(
-                "Class already exists",
-                409
-            );
-        }
-    }
-
-    klass.className = className || klass.className;
-    klass.section = section || klass.section;
-    klass.classTeacher = classTeacher || klass.classTeacher;
-
-    await klass.save();
-
-    res.status(200).json({
-        success: true,
-        message: "Class successfully updated.",
-        class: klass,
+  if (className && section) {
+    const existingClass = await Class.findOne({
+      className,
+      section,
+      _id: { $ne: id },
     });
+
+    if (existingClass) {
+      throw new AppError(
+        "Class already exists",
+        409
+      );
+    }
+  }
+
+  klass.className = className || klass.className;
+  klass.section = section || klass.section;
+  if (classTeacher !== undefined) {
+    klass.classTeacher = classTeacher;
+  }
+
+  await klass.save();
+
+  res.status(200).json({
+    success: true,
+    message: "Class successfully updated.",
+    class: klass,
+  });
 });
 
 export const deleteClass = asyncHandler(async (req, res) => {
-    const { id } = req.params;
-    const klass = await Class.findByIdAndDelete(id)
+  const { id } = req.params;
+  const klass = await Class.findByIdAndDelete(id)
 
-    if (!klass) {
-        throw new AppError(
-            "Class not found",
-            404
-        );
-    }
+  if (!klass) {
+    throw new AppError(
+      "Class not found",
+      404
+    );
+  }
 
-    res.status(200).json({
-        success: true,
-        message: "Class successfully deleted."
-    });
+  res.status(200).json({
+    success: true,
+    message: "Class successfully deleted."
+  });
 
 })

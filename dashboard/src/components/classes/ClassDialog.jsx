@@ -38,13 +38,9 @@ export default function ClassDialog({ open, onClose, classData }) {
         classTeacher: "",
     });
 
-    const {
-        data,
-        Loading,
-        error,
-    } = useGetTeachersQuery();
+    const { data, isLoading: isGeting } = useGetTeachersQuery();
 
-    const teachers = data.teachers;
+    const teachers = data?.teachers || [];
 
 
     const [errors, setErrors] = useState({});
@@ -213,9 +209,13 @@ export default function ClassDialog({ open, onClose, classData }) {
                         </FieldLabel>
 
                         <Select
-                            value={formData.classTeacher}
+                            value={formData.classTeacher || "none"}
                             onValueChange={(value) =>
-                                updateField("classTeacher", value)}
+                                updateField(
+                                    "classTeacher",
+                                    value === "none" ? "" : value
+                                )
+                            }
                         >
                             <SelectTrigger
                                 aria-invalid={!!errors.classTeacher}
@@ -224,6 +224,10 @@ export default function ClassDialog({ open, onClose, classData }) {
                             </SelectTrigger>
 
                             <SelectContent>
+                                <SelectItem value="none">
+                                    None
+                                </SelectItem>
+
                                 {teachers?.map((teacher) => (
                                     <SelectItem
                                         key={teacher._id}
@@ -231,8 +235,7 @@ export default function ClassDialog({ open, onClose, classData }) {
                                     >
                                         {teacher.teacherName}
                                     </SelectItem>
-                                )
-                                )}
+                                ))}
                             </SelectContent>
                         </Select>
 
