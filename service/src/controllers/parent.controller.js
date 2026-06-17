@@ -8,39 +8,132 @@ import { generatePassword } from "../utils/genaratePassword.js";
 import mongoose from "mongoose";
 
 export const getAllParents = asyncHandler(async (req, res) => {
-  const page = Number(req.query.page) || 1;
-  const limit = Number(req.query.limit) || 10;
+        const page = Number(req.query.page) || 1;
+        const limit = Number(req.query.limit) || 10;
+        const search = req.query.search?.trim() || "";
+        const skip = (page - 1) * limit;
 
-  const skip = (page - 1) * limit;
+        const matchStage = search ? {
+                  $or: [
+                    {
+                    fatherName: { $regex: search, $options: "i",},
+                      },
+                      {
+                          motherName: { $regex: search, $options: "i",},
+                      },
+                      {
+                          phoneNumber: { $regex: search, $options: "i", },
+                      },
+                      {
+                          email: { $regex: search, $options: "i", },
+                      },
+                  ],
+              }
+            : {};
 
-  const totalParents = await Parent.countDocuments();
+        const parents =
+            await Parent.aggregate([
+                {
+                    $lookup: {
+                        from: "students",
+                        localField:
+                            "studentIds",
+                        foreignField:
+                            "_id",
+                        as: "students",
+                    },
+                },
 
-  const parents = await Parent.find()
-    .populate(
-      "userId",
-      "name email mobile role status"
-    )
-    .sort({ createdAt: -1 })
-    .skip(skip)
-    .limit(limit);
+                {
+                    $match: search
+                        ? {
+                              $or: [
+                                  {
+                                      fatherName:
+                                          {
+                                              $regex:
+                                                  search,
+                                              $options:
+                                                  "i",
+                                          },
+                                  },
+                                  {
+                                      motherName:
+                                          {
+                                              $regex:
+                                                  search,
+                                              $options:
+                                                  "i",
+                                          },
+                                  },
+                                  {
+                                      phoneNumber:
+                                          {
+                                              $regex:
+                                                  search,
+                                              $options:
+                                                  "i",
+                                          },
+                                  },
+                                  {
+                                      email: {
+                                          $regex:
+                                              search,
+                                          $options:
+                                              "i",
+                                      },
+                                  },
+                                  {
+                                      "students.studentName":
+                                          {
+                                              $regex:
+                                                  search,
+                                              $options:
+                                                  "i",
+                                          },
+                                  },
+                              ],
+                          }
+                        : {},
+                },
 
-  res.status(200).json({
-    success: true,
-    message: "Parents fetched successfully",
+                {
+                    $sort: {
+                        createdAt: -1,
+                    },
+                },
 
-    pagination: {
-      totalRecords: totalParents,
-      currentPage: page,
-      totalPages: Math.ceil(
-        totalParents / limit
-      ),
-      limit,
-    },
+                {
+                    $skip: skip,
+                },
 
-    count: parents.length,
-    parents,
-  });
-});
+                {
+                    $limit: limit,
+                },
+            ]);
+
+        const totalRecords =
+            await Parent.countDocuments(
+                matchStage
+            );
+
+        res.status(200).json({
+            success: true,
+            parents,
+
+            pagination: {
+                totalRecords,
+                currentPage: page,
+                totalPages:
+                    Math.ceil(
+                        totalRecords /
+                            limit
+                    ),
+                limit,
+            },
+        });
+    }
+);
 
 export const getParentById = asyncHandler(async (req, res) => {
   const { id } = req.params;
