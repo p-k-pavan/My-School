@@ -28,7 +28,7 @@ const validatePeriods = async (periods, classId) => {
             throw new AppError(`Invalid teacher ID: ${teacherId}`, 400);
         }
 
-        const subject = await Subject.findOne({ _id: subjectId});
+        const subject = await Subject.findOne({ _id: subjectId });
         if (!subject) {
             throw new AppError(`Subject not found `, 404);
         }
@@ -208,4 +208,65 @@ export const deleteTimetable = asyncHandler(async (req, res) => {
         success: true,
         message: "Timetable record deleted successfully",
     });
+});
+
+export const getSubjectsByClass = asyncHandler(async (req, res) => {
+
+    const { classId } = req.params;
+
+    const klass = await Class.findById(classId);
+
+    if (!klass) {
+        throw new AppError(
+            "Class not found",
+            404
+        );
+    }
+
+    const subjects = await Timetable.aggregate([
+        {
+            $match: {
+                classId: new mongoose.Types.ObjectId(classId),
+                isActive: true,
+            },
+        },
+        { $unwind: "$periods" },
+        {
+            $group: {
+                _id: "$periods.subjectId",
+            },
+        },
+        {
+            $lookup: {
+                from: "subjects",
+                localField: "_id",
+                foreignField: "_id",
+                as: "subject",
+            },
+        },
+        { $unwind: "$subject" },
+        {
+            $replaceRoot: {
+                newRoot: "$subject",
+            },
+        },
+        {
+            $project: {
+                subjectName: 1,
+                subjectCode: 1,
+            },
+        },
+        {
+            $sort: {
+                subjectName: 1,
+            },
+        },
+    ]);
+
+    return res.status(200).json({
+        success: true,
+        count: subjects.length,
+        subjects,
+    });
+
 });
