@@ -59,6 +59,13 @@ export const menus = [
   },
 
   {
+    name: "Subjects",
+    path: "/subjects",
+    icon: NewspaperIcon,
+    roles: ["management", "admin"],
+  },
+
+  {
     name: "Attendance",
     path: "/attendance",
     icon: LuBadge,

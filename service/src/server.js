@@ -12,6 +12,9 @@ import teacherRoutes from "./routes/teacher.route.js"
 import studentRoutes from "./routes/student.route.js"
 import parentRoutes from "./routes/parent.route.js"
 import admissionRoutes from "./routes/admission.route.js"
+import attendanceRoutes from "./routes/attendance.route.js";
+import subjectRoutes from "./routes/subject.route.js";
+import timetableRoutes from "./routes/timetable.route.js";
 
 dotenv.config();
 
@@ -40,6 +43,9 @@ app.use("/api/teacher", teacherRoutes);
 app.use("/api/student", studentRoutes);
 app.use("/api/parent", parentRoutes);
 app.use("/api/admissions", admissionRoutes);
+app.use("/api/attendance", attendanceRoutes);
+app.use("/api/subject", subjectRoutes);
+app.use("/api/timetable", timetableRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

@@ -123,6 +123,7 @@ export const getStudentsByClass = asyncHandler(async (req, res) => {
 
     const students = await Student.find({
         classId,
+        status: { $ne: false },
     })
         .populate("classId", "className section")
         .populate(

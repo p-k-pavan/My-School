@@ -10,6 +10,9 @@ import Classes from './pages/Classes'
 import Teachers from './pages/Teachers'
 import Parents from './pages/Parents'
 import Students from './pages/Students'
+import Attendance from './pages/Attendance'
+import Subjects from './pages/Subjects'
+import Timetable from './pages/Timetable'
 
 function App() {
   return (
@@ -29,6 +32,9 @@ function App() {
             <Route path="/teachers" element={<Teachers />} />
             <Route path="/parents" element={<Parents />} />
             <Route path="/students" element={<Students />} />
+            <Route path="/attendance" element={<Attendance />} />
+            <Route path="/subjects" element={<Subjects />} />
+            <Route path="/timetable" element={<Timetable />} />
           </Route>
 
         </Routes>

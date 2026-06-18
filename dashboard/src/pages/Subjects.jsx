@@ -106,7 +106,6 @@ export default function Subjects() {
                 setSearchQuery={setSearchQuery}
             />
 
-            {/* Subjects Grid */}
             {isSubjectsLoading ? (
                 <div className="flex justify-center items-center py-20">
                     <Loader2 className="h-10 w-10 animate-spin text-primary" />
@@ -172,7 +171,6 @@ export default function Subjects() {
                 </div>
             )}
 
-            {/* Pagination Controls */}
             {subjectsData?.totalPages > 1 && (
                 <div className="flex justify-center items-center gap-2 pt-4">
                     <Button
@@ -197,14 +195,12 @@ export default function Subjects() {
                 </div>
             )}
 
-            {/* Add/Edit Subject Dialog Component */}
             <SubjectDialog
                 open={openDialog}
                 onClose={() => setOpenDialog(false)}
                 subjectData={editingSubject}
             />
 
-            {/* Delete Confirmation Dialog Component */}
             <DeleteConfirmDialog
                 open={openDeleteDialog}
                 onClose={() => setOpenDeleteDialog(false)}

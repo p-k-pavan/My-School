@@ -5,7 +5,6 @@ import {
     markAttendance,
     getAttendanceByStudent,
     getAttendanceByClass,
-    getAttendanceSummary,
     updateAttendance,
 } from "../controllers/attendance.controller.js";
 
@@ -29,12 +28,6 @@ router.get(
     "/class/:classId",
     authorizeRoles("teacher", "admin", "management"),
     getAttendanceByClass
-);
-
-router.get(
-    "/summary",
-    authorizeRoles("teacher", "admin", "management", "parent"),
-    getAttendanceSummary
 );
 
 router.put(

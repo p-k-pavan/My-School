@@ -33,14 +33,6 @@ export const attendanceApi = createApi({
             providesTags: ["Attendance"],
         }),
 
-        getAttendanceSummary: builder.query({
-            query: (params) => ({
-                url: "/attendance/summary",
-                params,
-            }),
-            providesTags: ["Attendance"],
-        }),
-
         updateAttendance: builder.mutation({
             query: ({ id, data }) => ({
                 url: `/attendance/${id}`,
@@ -56,6 +48,5 @@ export const {
     useMarkAttendanceMutation,
     useGetAttendanceByStudentQuery,
     useGetAttendanceByClassQuery,
-    useGetAttendanceSummaryQuery,
     useUpdateAttendanceMutation,
 } = attendanceApi;
