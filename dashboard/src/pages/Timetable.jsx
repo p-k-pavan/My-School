@@ -6,7 +6,6 @@ import { useSelector } from "react-redux";
 import PageHeading from "@/layout/PageHeading";
 import { Button } from "@/components/ui/button";
 
-// Modular Subcomponents
 import TimetableControls from "@/components/timetable/TimetableControls";
 import TimetablePeriodCard from "@/components/timetable/TimetablePeriodCard";
 import TimetableDialog from "@/components/timetable/TimetableDialog";
@@ -24,39 +23,32 @@ export default function Timetable() {
     const { user } = useSelector((state) => state.auth);
     const isAdminOrManagement = ["admin", "management"].includes(user?.role);
 
-    // Filters state
     const [selectedClass, setSelectedClass] = useState("");
     const [academicYear, setAcademicYear] = useState("2026-2027");
     const [activeTabDay, setActiveTabDay] = useState("Monday");
 
-    // Dialog state
     const [openDialog, setOpenDialog] = useState(false);
     const [editingTimetable, setEditingTimetable] = useState(null);
 
-    // Fetch master data
     const { data: classesData, isLoading: isClassesLoading } = useGetClassQuery();
     const classesList = classesData?.classes || [];
     const { data: teachersData } = useGetTeachersQuery();
     const teachersList = teachersData?.teachers || [];
 
-    // Auto-select first class when loaded
     useEffect(() => {
         if (classesList.length > 0 && !selectedClass) {
             setSelectedClass(classesList[0]._id);
         }
     }, [classesList, selectedClass]);
 
-    // Fetch timetable for selected class
     const { data: timetableData, isLoading: isTimetableLoading } = useGetTimetableByClassQuery(
         { classId: selectedClass, academicYear },
         { skip: !selectedClass }
     );
     const timetableRecords = timetableData?.timetable || [];
 
-    // Mutations
     const [deleteTimetable] = useDeleteTimetableMutation();
 
-    // Open schedule dialog
     const handleOpenAdd = () => {
         setEditingTimetable(null);
         setOpenDialog(true);
@@ -78,10 +70,9 @@ export default function Timetable() {
         }
     };
 
-    // Get active day's timetable record
     const activeDayRecord = timetableRecords.find(t => t.day === activeTabDay);
-    const sortedPeriods = activeDayRecord 
-        ? [...activeDayRecord.periods].sort((a, b) => a.periodNo - b.periodNo) 
+    const sortedPeriods = activeDayRecord
+        ? [...activeDayRecord.periods].sort((a, b) => a.periodNo - b.periodNo)
         : [];
 
     return (
@@ -94,7 +85,6 @@ export default function Timetable() {
                 addNewText="Schedule Day"
             />
 
-            {/* Timetable Filters Component */}
             <TimetableControls
                 selectedClass={selectedClass}
                 setSelectedClass={setSelectedClass}
@@ -103,7 +93,6 @@ export default function Timetable() {
                 classesList={classesList}
             />
 
-            {/* Weekday Tab Switcher */}
             <div className="flex flex-wrap border-b border-border gap-1">
                 {WEEKDAYS.map((day) => {
                     const hasSchedule = timetableRecords.some(t => t.day === day && t.periods.length > 0);
@@ -124,7 +113,6 @@ export default function Timetable() {
                 })}
             </div>
 
-            {/* Timetable schedule content */}
             {isClassesLoading || isTimetableLoading ? (
                 <div className="flex justify-center items-center py-20">
                     <Loader2 className="h-10 w-10 animate-spin text-primary" />
@@ -176,7 +164,6 @@ export default function Timetable() {
                         )}
                     </div>
 
-                    {/* Periods Grid Timeline (using TimetablePeriodCard) */}
                     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                         {sortedPeriods.map((period, idx) => (
                             <TimetablePeriodCard key={idx} period={period} />
@@ -185,7 +172,6 @@ export default function Timetable() {
                 </div>
             )}
 
-            {/* Add / Edit Timetable Dialog Component */}
             <TimetableDialog
                 open={openDialog}
                 onClose={() => setOpenDialog(false)}

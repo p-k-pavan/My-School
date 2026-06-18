@@ -43,7 +43,6 @@ export default function TimetableDialog({
 }) {
     const isEdit = !!timetableData;
 
-    // Form states
     const [formClassId, setFormClassId] = useState("");
     const [formDay, setFormDay] = useState("Monday");
     const [formAcademicYear, setFormAcademicYear] = useState("2026-2027");
@@ -52,7 +51,6 @@ export default function TimetableDialog({
     ]);
     const [errors, setErrors] = useState({});
 
-    // Fetch subjects for select dropdowns
     const { data: formSubjectsData } = useGetSubjectsQuery(
         { classId: formClassId || selectedClass, limit: 100 },
         { skip: !formClassId && !selectedClass }
