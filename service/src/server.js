@@ -15,6 +15,7 @@ import admissionRoutes from "./routes/admission.route.js"
 import attendanceRoutes from "./routes/attendance.route.js";
 import subjectRoutes from "./routes/subject.route.js";
 import timetableRoutes from "./routes/timetable.route.js";
+import homeworkRoutes from "./routes/homework.route.js"
 
 dotenv.config();
 
@@ -46,6 +47,7 @@ app.use("/api/admissions", admissionRoutes);
 app.use("/api/attendance", attendanceRoutes);
 app.use("/api/subject", subjectRoutes);
 app.use("/api/timetable", timetableRoutes);
+app.use("/api/homework", homeworkRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
