@@ -1,12 +1,21 @@
+import mongoose from "mongoose";
 import asyncHandler from "../middleware/asyncHandler";
 import { Fee } from "../models/Fee";
 import { FeeStructure } from "../models/FeeStructure";
 import { Student } from "../models/student.model";
+import { Class } from "../models/class.model";
 import AppError from "../utils/AppError";
+import ExcelJS from "exceljs";
 
 
+const computeLiveStatus = (fee) => {
+    if (fee.dueAmount <= 0) return "paid";
+    const today = new Date();
+    if (fee.dueDate && today > new Date(fee.dueDate)) return "overdue";
+    if (fee.paidAmount > 0) return "partial";
+    return "pending";
+};
 
-// createFee
 export const createFee = asyncHandler(async (req, res) => {
     const {
         studentId,
@@ -16,9 +25,20 @@ export const createFee = asyncHandler(async (req, res) => {
     } = req.body;
 
     if (!studentId || !feeStructureId || !academicYear) {
-        throw new AppError(
-            "Required fields are missing",
-            400
+        throw new AppError("Required fields are missing", 400
+        );
+    }
+
+    if (
+        !mongoose.Types.ObjectId.isValid(studentId) ||
+        !mongoose.Types.ObjectId.isValid(feeStructureId)
+    ) {
+        throw new AppError("Invalid Student or Fee Structure ID", 400
+        );
+    }
+
+    if (typeof discountAmount !== "number" || discountAmount < 0) {
+        throw new AppError("Discount amount cannot be negative", 400
         );
     }
 
@@ -28,16 +48,12 @@ export const createFee = asyncHandler(async (req, res) => {
     ]);
 
     if (!student) {
-        throw new AppError(
-            "Student not found",
-            404
+        throw new AppError("Student not found", 404
         );
     }
 
     if (!feeStructure) {
-        throw new AppError(
-            "Fee Structure not found",
-            404
+        throw new AppError("Fee Structure not found", 404
         );
     }
 
@@ -47,13 +63,17 @@ export const createFee = asyncHandler(async (req, res) => {
     });
 
     if (existingFee) {
-        throw new AppError(
-            "Fee already assigned to this student",
-            409
+        throw new AppError("Fee already assigned to this student", 409
         );
     }
 
     const totalFee = feeStructure.totalFee;
+
+    if (discountAmount > totalFee) {
+        throw new AppError("Discount amount cannot exceed total fee", 400
+        );
+    }
+
     const dueAmount = totalFee - discountAmount;
 
     const fee = await Fee.create({
@@ -74,7 +94,6 @@ export const createFee = asyncHandler(async (req, res) => {
     });
 });
 
-//generateFeesForClass
 export const generateFeesForClass = asyncHandler(async (req, res) => {
     const {
         classId,
@@ -83,10 +102,14 @@ export const generateFeesForClass = asyncHandler(async (req, res) => {
     } = req.body;
 
     if (!classId || !feeStructureId || !academicYear) {
-        throw new AppError(
-            "Required fields are missing",
-            400
-        );
+        throw new AppError("Required fields are missing", 400);
+    }
+
+    if (
+        !mongoose.Types.ObjectId.isValid(classId) ||
+        !mongoose.Types.ObjectId.isValid(feeStructureId)
+    ) {
+        throw new AppError("Invalid Class or Fee Structure ID", 400);
     }
 
     const [klass, feeStructure] = await Promise.all([
@@ -142,7 +165,6 @@ export const generateFeesForClass = asyncHandler(async (req, res) => {
             studentId: student._id,
             feeStructureId,
             academicYear,
-
             totalFee: feeStructure.totalFee,
             paidAmount: 0,
             dueAmount: feeStructure.totalFee,
@@ -160,10 +182,10 @@ export const generateFeesForClass = asyncHandler(async (req, res) => {
         success: true,
         message: `${feeRecords.length} fee records generated successfully`,
         count: feeRecords.length,
+        skipped: students.length - feeRecords.length,
     });
 });
 
-// getAllFees
 export const getAllFees = asyncHandler(async (req, res) => {
     const {
         page = 1,
@@ -176,7 +198,10 @@ export const getAllFees = asyncHandler(async (req, res) => {
 
     const filter = {};
 
-    if (status) {
+    if (status === "overdue") {
+        filter.dueAmount = { $gt: 0 };
+        filter.dueDate = { $lt: new Date() };
+    } else if (status) {
         filter.status = status;
     }
 
@@ -184,12 +209,13 @@ export const getAllFees = asyncHandler(async (req, res) => {
         filter.academicYear = academicYear;
     }
 
-    let studentIds = [];
-
     if (classId || search) {
         const studentFilter = {};
 
         if (classId) {
+            if (!mongoose.Types.ObjectId.isValid(classId)) {
+                throw new AppError("Invalid Class ID", 400);
+            }
             studentFilter.classId = classId;
         }
 
@@ -213,7 +239,7 @@ export const getAllFees = asyncHandler(async (req, res) => {
         const students = await Student.find(studentFilter)
             .select("_id");
 
-        studentIds = students.map(
+        const studentIds = students.map(
             (student) => student._id
         );
 
@@ -238,27 +264,30 @@ export const getAllFees = asyncHandler(async (req, res) => {
             "academicYear classLevel totalFee"
         )
         .sort({ createdAt: -1 })
-        .skip((page - 1) * limit)
-        .limit(Number(limit));
+        .skip((Number(page) - 1) * Number(limit))
+        .limit(Number(limit))
+        .lean();
+
+    const feesWithLiveStatus = fees.map((fee) => ({
+        ...fee,
+        status: computeLiveStatus(fee),
+    }));
 
     return res.status(200).json({
         success: true,
         count: fees.length,
         total,
         currentPage: Number(page),
-        totalPages: Math.ceil(total / limit),
-        fees,
+        totalPages: Math.ceil(total / Number(limit)),
+        fees: feesWithLiveStatus,
     });
 });
 
-// getFeeById
 export const getFeeById = asyncHandler(async (req, res) => {
     const { id } = req.params;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
-        throw new AppError(
-            "Invalid Fee ID",
-            400
+        throw new AppError("Invalid Fee ID", 400
         );
     }
 
@@ -286,27 +315,26 @@ export const getFeeById = asyncHandler(async (req, res) => {
     return res.status(200).json({
         success: true,
         message: "Fee fetched successfully",
-        fee,
+        fee: {
+            ...fee.toObject(),
+            status: computeLiveStatus(fee),
+        },
     });
 });
 
-// getStudentFee
 export const getFeeByStudent = asyncHandler(async (req, res) => {
     const { studentId } = req.params;
+    const { academicYear } = req.query;
 
     if (!mongoose.Types.ObjectId.isValid(studentId)) {
-        throw new AppError(
-            "Invalid Student ID",
-            400
+        throw new AppError("Invalid Student ID", 400
         );
     }
 
     const student = await Student.findById(studentId);
 
     if (!student) {
-        throw new AppError(
-            "Student not found",
-            404
+        throw new AppError("Student not found", 404
         );
     }
 
@@ -318,7 +346,12 @@ export const getFeeByStudent = asyncHandler(async (req, res) => {
         );
     }
 
-    const fee = await Fee.findOne({ studentId, academicYear })
+    const query = { studentId };
+    if (academicYear) {
+        query.academicYear = academicYear;
+    }
+
+    const fees = await Fee.find(query)
         .populate({
             path: "studentId",
             select: "admissionNo studentName rollNo classId",
@@ -330,40 +363,37 @@ export const getFeeByStudent = asyncHandler(async (req, res) => {
         .populate(
             "feeStructureId",
             "academicYear classLevel totalFee"
-        );
+        )
+        .sort({ academicYear: -1 });
 
-    if (!fee) {
-        throw new AppError(
-            "Fee details not found",
-            404
+    if (fees.length === 0) {
+        throw new AppError("Fee details not found", 404
         );
     }
 
     return res.status(200).json({
         success: true,
         message: "Fee fetched successfully",
-        fee,
+        count: fees.length,
+        fees: fees.map((fee) => ({
+            ...fee.toObject(),
+            status: computeLiveStatus(fee),
+        })),
     });
 });
 
-// getFeeByClass
 export const getFeeByClass = asyncHandler(async (req, res) => {
     const { classId } = req.params;
+    const { academicYear } = req.query;
 
     if (!mongoose.Types.ObjectId.isValid(classId)) {
-        throw new AppError(
-            "Invalid Class ID",
-            400
-        );
+        throw new AppError("Invalid Class ID", 400);
     }
 
     const klass = await Class.findById(classId);
 
     if (!klass) {
-        throw new AppError(
-            "Class not found",
-            404
-        );
+        throw new AppError("Class not found", 404);
     }
 
     const students = await Student.find({
@@ -375,11 +405,17 @@ export const getFeeByClass = asyncHandler(async (req, res) => {
         (student) => student._id
     );
 
-    const fees = await Fee.find({
+    const filter = {
         studentId: {
             $in: studentIds,
         },
-    })
+    };
+
+    if (academicYear) {
+        filter.academicYear = academicYear;
+    }
+
+    const fees = await Fee.find(filter)
         .populate({
             path: "studentId",
             select: "admissionNo studentName rollNo",
@@ -395,10 +431,51 @@ export const getFeeByClass = asyncHandler(async (req, res) => {
     });
 });
 
-// updateFee
 export const updateFee = asyncHandler(async (req, res) => {
     const { id } = req.params;
     const { discountAmount = 0 } = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+        throw new AppError("Invalid Fee ID", 400);
+    }
+
+    if (typeof discountAmount !== "number" || discountAmount < 0) {
+        throw new AppError("Discount amount cannot be negative", 400);
+    }
+
+    const fee = await Fee.findById(id);
+
+    if (!fee) {
+        throw new AppError("Fee record not found", 404);
+    }
+
+    if (discountAmount + fee.paidAmount > fee.totalFee) {
+        throw new AppError(
+            "Discount combined with amount already paid cannot exceed total fee",
+            400
+        );
+    }
+
+    fee.discountAmount = discountAmount;
+
+    fee.dueAmount =
+        fee.totalFee -
+        fee.paidAmount -
+        discountAmount;
+
+    fee.status = computeLiveStatus(fee);
+
+    await fee.save();
+
+    return res.status(200).json({
+        success: true,
+        message: "Fee updated successfully",
+        fee,
+    });
+});
+
+export const deleteFee = asyncHandler(async (req, res) => {
+    const { id } = req.params;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
         throw new AppError(
@@ -416,37 +493,336 @@ export const updateFee = asyncHandler(async (req, res) => {
         );
     }
 
-    if (discountAmount < 0) {
+    if (fee.paidAmount > 0) {
         throw new AppError(
-            "Discount amount cannot be negative",
+            "Cannot delete a fee record that already has payments recorded against it",
             400
         );
     }
 
-    fee.discountAmount = discountAmount;
-
-    fee.dueAmount =
-        fee.totalFee -
-        fee.paidAmount -
-        discountAmount;
-
-    const today = new Date();
-
-    if (fee.dueAmount <= 0) {
-        fee.status = "paid";
-    } else if (today > fee.dueDate) {
-        fee.status = "overdue";
-    } else if (fee.paidAmount > 0) {
-        fee.status = "partial";
-    } else {
-        fee.status = "pending";
-    }
-
-    await fee.save();
+    await Fee.findByIdAndDelete(id);
 
     return res.status(200).json({
         success: true,
-        message: "Fee updated successfully",
-        fee,
+        message: "Fee record deleted successfully",
     });
+});
+
+// generateFeesForSchool
+export const generateFeesForSchool = asyncHandler(async (req, res) => {
+    const { academicYear, assignments } = req.body;
+ 
+    if (!academicYear || !Array.isArray(assignments) || assignments.length === 0) {
+        throw new AppError(
+            "academicYear and a non-empty assignments array (classId + feeStructureId pairs) are required",
+            400
+        );
+    }
+ 
+    for (const a of assignments) {
+        if (
+            !a.classId || !a.feeStructureId ||
+            !mongoose.Types.ObjectId.isValid(a.classId) ||
+            !mongoose.Types.ObjectId.isValid(a.feeStructureId)
+        ) {
+            throw new AppError(
+                "Each assignment needs a valid classId and feeStructureId",
+                400
+            );
+        }
+    }
+ 
+    const feeStructureIds = [...new Set(assignments.map((a) => a.feeStructureId))];
+    const feeStructures = await FeeStructure.find({ _id: { $in: feeStructureIds } });
+    const structureMap = new Map(
+        feeStructures.map((fs) => [fs._id.toString(), fs])
+    );
+ 
+    const results = [];
+    let totalGenerated = 0;
+ 
+    for (const { classId, feeStructureId } of assignments) {
+        const feeStructure = structureMap.get(feeStructureId.toString());
+ 
+        if (!feeStructure) {
+            results.push({ classId, generated: 0, error: "Fee structure not found" });
+            continue;
+        }
+ 
+        const students = await Student.find({
+            classId,
+            status: "active",
+        }).select("_id");
+ 
+        if (students.length === 0) {
+            results.push({ classId, generated: 0, error: "No active students in class" });
+            continue;
+        }
+ 
+        const existingFees = await Fee.find({
+            academicYear,
+            studentId: { $in: students.map((s) => s._id) },
+        }).select("studentId");
+ 
+        const existingStudentIds = new Set(
+            existingFees.map((f) => f.studentId.toString())
+        );
+ 
+        const feeRecords = students
+            .filter((s) => !existingStudentIds.has(s._id.toString()))
+            .map((s) => ({
+                studentId: s._id,
+                feeStructureId,
+                academicYear,
+                totalFee: feeStructure.totalFee,
+                paidAmount: 0,
+                dueAmount: feeStructure.totalFee,
+                discountAmount: 0,
+                status: "pending",
+            }));
+ 
+        if (feeRecords.length > 0) {
+            await Fee.insertMany(feeRecords, { ordered: false });
+        }
+ 
+        totalGenerated += feeRecords.length;
+        results.push({
+            classId,
+            generated: feeRecords.length,
+            skippedAlreadyAssigned: students.length - feeRecords.length,
+        });
+    }
+ 
+    return res.status(201).json({
+        success: true,
+        message: `${totalGenerated} fee record(s) generated across ${assignments.length} class(es)`,
+        totalGenerated,
+        results,
+    });
+});
+ 
+// getFeeDashboard 
+export const getFeeDashboard = asyncHandler(async (req, res) => {
+    const { academicYear, classId } = req.query;
+ 
+    const matchStage = {};
+    if (academicYear) matchStage.academicYear = academicYear;
+ 
+    if (classId) {
+        if (!mongoose.Types.ObjectId.isValid(classId)) {
+            throw new AppError("Invalid Class ID", 400);
+        }
+        const students = await Student.find({ classId }).select("_id");
+        matchStage.studentId = { $in: students.map((s) => s._id) };
+    }
+ 
+    const today = new Date();
+ 
+    const [summary] = await Fee.aggregate([
+        { $match: matchStage },
+        {
+            $group: {
+                _id: null,
+                totalStudents: { $sum: 1 },
+                totalExpected: {
+                    $sum: { $subtract: ["$totalFee", "$discountAmount"] },
+                },
+                totalCollected: { $sum: "$paidAmount" },
+                totalDue: { $sum: "$dueAmount" },
+                paidCount: {
+                    $sum: { $cond: [{ $lte: ["$dueAmount", 0] }, 1, 0] },
+                },
+                overdueCount: {
+                    $sum: {
+                        $cond: [
+                            {
+                                $and: [
+                                    { $gt: ["$dueAmount", 0] },
+                                    { $lt: ["$dueDate", today] },
+                                ],
+                            },
+                            1,
+                            0,
+                        ],
+                    },
+                },
+                partialCount: {
+                    $sum: {
+                        $cond: [
+                            {
+                                $and: [
+                                    { $gt: ["$paidAmount", 0] },
+                                    { $gt: ["$dueAmount", 0] },
+                                    { $gte: ["$dueDate", today] },
+                                ],
+                            },
+                            1,
+                            0,
+                        ],
+                    },
+                },
+                pendingCount: {
+                    $sum: {
+                        $cond: [
+                            {
+                                $and: [
+                                    { $eq: ["$paidAmount", 0] },
+                                    { $gt: ["$dueAmount", 0] },
+                                    { $gte: ["$dueDate", today] },
+                                ],
+                            },
+                            1,
+                            0,
+                        ],
+                    },
+                },
+            },
+        },
+    ]);
+ 
+    if (!summary) {
+        return res.status(200).json({
+            success: true,
+            summary: {
+                totalStudents: 0,
+                totalExpected: 0,
+                totalCollected: 0,
+                totalDue: 0,
+                collectionPercentage: 0,
+                paidCount: 0,
+                overdueCount: 0,
+                partialCount: 0,
+                pendingCount: 0,
+            },
+        });
+    }
+ 
+    delete summary._id;
+    summary.collectionPercentage =
+        summary.totalExpected > 0
+            ? Number(
+                  ((summary.totalCollected / summary.totalExpected) * 100).toFixed(2)
+              )
+            : 0;
+ 
+    return res.status(200).json({
+        success: true,
+        summary,
+    });
+});
+ 
+// getDefaulters — students with overdue, unpaid balances
+export const getDefaulters = asyncHandler(async (req, res) => {
+    const { academicYear, classId, page = 1, limit = 20 } = req.query;
+ 
+    const filter = {
+        dueAmount: { $gt: 0 },
+        dueDate: { $lt: new Date() },
+    };
+ 
+    if (academicYear) filter.academicYear = academicYear;
+ 
+    if (classId) {
+        if (!mongoose.Types.ObjectId.isValid(classId)) {
+            throw new AppError("Invalid Class ID", 400);
+        }
+        const students = await Student.find({ classId }).select("_id");
+        filter.studentId = { $in: students.map((s) => s._id) };
+    }
+ 
+    const total = await Fee.countDocuments(filter);
+ 
+    const defaulters = await Fee.find(filter)
+        .populate({
+            path: "studentId",
+            select: "studentName admissionNo rollNo classId parentId",
+            populate: { path: "classId", select: "className section" },
+        })
+        .sort({ dueDate: 1 })
+        .skip((Number(page) - 1) * Number(limit))
+        .limit(Number(limit))
+        .lean();
+ 
+    return res.status(200).json({
+        success: true,
+        count: defaulters.length,
+        total,
+        currentPage: Number(page),
+        totalPages: Math.ceil(total / Number(limit)),
+        defaulters: defaulters.map((fee) => ({
+            ...fee,
+            daysOverdue: Math.floor(
+                (Date.now() - new Date(fee.dueDate)) / (1000 * 60 * 60 * 24)
+            ),
+        })),
+    });
+});
+ 
+export const exportFeesToExcel = asyncHandler(async (req, res) => {
+    const { academicYear, classId, status } = req.query;
+ 
+    const filter = {};
+    if (academicYear) filter.academicYear = academicYear;
+    if (status) filter.status = status;
+ 
+    if (classId) {
+        if (!mongoose.Types.ObjectId.isValid(classId)) {
+            throw new AppError("Invalid Class ID", 400);
+        }
+        const students = await Student.find({ classId }).select("_id");
+        filter.studentId = { $in: students.map((s) => s._id) };
+    }
+ 
+    const fees = await Fee.find(filter)
+        .populate({
+            path: "studentId",
+            select: "studentName admissionNo rollNo classId",
+            populate: { path: "classId", select: "className section" },
+        })
+        .lean();
+ 
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet("Fees");
+ 
+    sheet.columns = [
+        { header: "Admission No", key: "admissionNo", width: 15 },
+        { header: "Student Name", key: "studentName", width: 25 },
+        { header: "Class", key: "className", width: 12 },
+        { header: "Academic Year", key: "academicYear", width: 14 },
+        { header: "Total Fee", key: "totalFee", width: 12 },
+        { header: "Discount", key: "discountAmount", width: 12 },
+        { header: "Paid", key: "paidAmount", width: 12 },
+        { header: "Due", key: "dueAmount", width: 12 },
+        { header: "Status", key: "status", width: 12 },
+    ];
+ 
+    fees.forEach((fee) => {
+        sheet.addRow({
+            admissionNo: fee.studentId?.admissionNo || "-",
+            studentName: fee.studentId?.studentName || "-",
+            className: fee.studentId?.classId
+                ? `${fee.studentId.classId.className}-${fee.studentId.classId.section}`
+                : "-",
+            academicYear: fee.academicYear,
+            totalFee: fee.totalFee,
+            discountAmount: fee.discountAmount,
+            paidAmount: fee.paidAmount,
+            dueAmount: fee.dueAmount,
+            status: fee.status,
+        });
+    });
+ 
+    sheet.getRow(1).font = { bold: true };
+ 
+    res.setHeader(
+        "Content-Type",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    );
+    res.setHeader(
+        "Content-Disposition",
+        `attachment; filename=fees-export-${Date.now()}.xlsx`
+    );
+ 
+    await workbook.xlsx.write(res);
+    res.end();
 });
