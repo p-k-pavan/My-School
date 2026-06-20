@@ -18,7 +18,6 @@ const feeTransactionSchema = new mongoose.Schema(
 
         receiptNo: {
             type: String,
-            required: true,
             unique: true,
             trim: true,
         },

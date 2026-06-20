@@ -16,7 +16,9 @@ import attendanceRoutes from "./routes/attendance.route.js";
 import subjectRoutes from "./routes/subject.route.js";
 import timetableRoutes from "./routes/timetable.route.js";
 import homeworkRoutes from "./routes/homework.route.js";
-import feestructure from "./routes/feeStructure.js";
+import feestructureRoutes from "./routes/feeStructure.js";
+import feesRoutes from "./routes/fee.route.js";
+import paymentRoutes from "./routes/payment.route.js";
 
 dotenv.config();
 
@@ -36,7 +38,7 @@ app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ limit: "10mb", extended: true }));
 
 app.get("/", (req, res) => {
-    res.send("API is running");
+  res.send("API is running");
 });
 
 app.use("/api/auth", authRoutes);
@@ -49,11 +51,13 @@ app.use("/api/attendance", attendanceRoutes);
 app.use("/api/subject", subjectRoutes);
 app.use("/api/timetable", timetableRoutes);
 app.use("/api/homework", homeworkRoutes);
-app.use("/api/feestructure", feestructure);
+app.use("/api/feestructure", feestructureRoutes);
+app.use("/api/fee", feesRoutes);
+app.use("/api/payment", paymentRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+  console.log(`Server is running on port ${PORT}`);
 });
 
 app.use(errorMiddleware);
