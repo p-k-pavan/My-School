@@ -40,6 +40,12 @@ const FeeSchema = new mongoose.Schema(
             default: 0,
         },
 
+        dueDate: {
+            type: Date,
+            required: true,
+            index: true,
+        },
+
         status: {
             type: String,
             enum: [
