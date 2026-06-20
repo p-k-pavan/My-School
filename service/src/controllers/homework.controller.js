@@ -84,6 +84,12 @@ export const createHomework = asyncHandler(async (req, res) => {
         dueDate: due
     })
 
+    return res.status(200).json({
+        success: true,
+        message: "Homework Created successfully",
+        homework,
+    });
+
 })
 
 //updateHomework

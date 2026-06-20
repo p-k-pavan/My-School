@@ -57,7 +57,7 @@ const feeStructureSchema = new mongoose.Schema(
 
 feeStructureSchema.index(
     {
-        className: 1,
+        classLevel: 1,
         academicYear: 1,
     },
     {

@@ -15,7 +15,8 @@ import admissionRoutes from "./routes/admission.route.js"
 import attendanceRoutes from "./routes/attendance.route.js";
 import subjectRoutes from "./routes/subject.route.js";
 import timetableRoutes from "./routes/timetable.route.js";
-import homeworkRoutes from "./routes/homework.route.js"
+import homeworkRoutes from "./routes/homework.route.js";
+import feestructure from "./routes/feeStructure.js";
 
 dotenv.config();
 
@@ -48,6 +49,7 @@ app.use("/api/attendance", attendanceRoutes);
 app.use("/api/subject", subjectRoutes);
 app.use("/api/timetable", timetableRoutes);
 app.use("/api/homework", homeworkRoutes);
+app.use("/api/feestructure", feestructure);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
