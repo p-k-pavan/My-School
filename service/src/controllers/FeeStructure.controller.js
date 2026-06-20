@@ -1,7 +1,6 @@
-
-
 // Create Fee Structure
 
+import mongoose from "mongoose";
 import asyncHandler from "../middleware/asyncHandler.js";
 import { Fee } from "../models/Fee.js";
 import { FeeStructure } from "../models/FeeStructure.js";
@@ -27,16 +26,22 @@ export const createFeeStructure = asyncHandler(async (req, res) => {
         );
     }
 
+    const feeValues = [
+        tuitionFee, transportFee, examFee,
+        libraryFee, miscellaneousFee, otherFee,
+    ];
+
+    if (feeValues.some((f) => typeof f !== "number" || f < 0)) {
+        throw new AppError( "Fee amounts must be non-negative numbers", 400 );
+    }
+
     const isExist = await FeeStructure.findOne({
         academicYear,
         classLevel,
     });
 
     if (isExist) {
-        throw new AppError(
-            "Fee structure already exists",
-            409
-        );
+        throw new AppError( "Fee structure already exists", 409);
     }
 
     const totalFee =
@@ -68,8 +73,14 @@ export const createFeeStructure = asyncHandler(async (req, res) => {
 
 // Get All Fee Structure
 export const getAllFeeStructure = asyncHandler(async (req, res) => {
+    const { academicYear } = req.query;
 
-    const feeStructures = await FeeStructure.find()
+    const filter = {};
+    if (academicYear) {
+        filter.academicYear = academicYear;
+    }
+
+    const feeStructures = await FeeStructure.find(filter)
         .sort({ classLevel: 1 });
 
     return res.status(200).json({
@@ -84,13 +95,34 @@ export const getFeeStructureById = asyncHandler(async (req, res) => {
     const { id } = req.params;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
-        throw new AppError(
-            "Invalid Fee Structure ID",
-            400
-        );
+        throw new AppError( "Invalid Fee Structure ID", 400 );
     }
 
     const feeStructure = await FeeStructure.findById(id);
+
+    if (!feeStructure) {
+        throw new AppError( "Fee Structure not found", 404 );
+    }
+
+    return res.status(200).json({
+        success: true,
+        message: "Fee Structure fetched successfully",
+        feeStructure,
+    });
+});
+
+// Get Fee Structure By Academic Year + Class Level
+export const getFeeStructureByYearAndClass = asyncHandler(async (req, res) => {
+    const { academicYear, classLevel } = req.query;
+
+    if (!academicYear || !classLevel) {
+        throw new AppError( "Academic year and class level are required", 400 );
+    }
+
+    const feeStructure = await FeeStructure.findOne({
+        academicYear,
+        classLevel,
+    });
 
     if (!feeStructure) {
         throw new AppError(
@@ -101,7 +133,6 @@ export const getFeeStructureById = asyncHandler(async (req, res) => {
 
     return res.status(200).json({
         success: true,
-        message: "Fee Structure fetched successfully",
         feeStructure,
     });
 });
@@ -109,6 +140,10 @@ export const getFeeStructureById = asyncHandler(async (req, res) => {
 // Update Fee Structure
 export const updateFeeStructure = asyncHandler(async (req, res) => {
     const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+        throw new AppError( "Invalid Fee Structure ID", 400 );
+    }
 
     const {
         tuitionFee = 0,
@@ -118,6 +153,18 @@ export const updateFeeStructure = asyncHandler(async (req, res) => {
         miscellaneousFee = 0,
         otherFee = 0,
     } = req.body;
+
+    const feeValues = [
+        tuitionFee, transportFee, examFee,
+        libraryFee, miscellaneousFee, otherFee,
+    ];
+
+    if (feeValues.some((f) => typeof f !== "number" || f < 0)) {
+        throw new AppError(
+            "Fee amounts must be non-negative numbers",
+            400
+        );
+    }
 
     const feeStructure = await FeeStructure.findById(id);
 
@@ -145,14 +192,18 @@ export const updateFeeStructure = asyncHandler(async (req, res) => {
 
     await feeStructure.save();
 
+    const assignedFeeCount = await Fee.countDocuments({ feeStructureId: id });
+
     return res.status(200).json({
         success: true,
         message: "Fee Structure updated successfully",
         feeStructure,
+        ...(assignedFeeCount > 0 && {
+            note: `${assignedFeeCount} student fee record(s) were already generated from this structure and were NOT changed — they keep their original totalFee.`,
+        }),
     });
 });
 
-// Delete Fee Structure
 export const deleteFeeStructure = asyncHandler(async (req, res) => {
     const { id } = req.params;
 
