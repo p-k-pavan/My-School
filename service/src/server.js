@@ -16,7 +16,7 @@ import attendanceRoutes from "./routes/attendance.route.js";
 import subjectRoutes from "./routes/subject.route.js";
 import timetableRoutes from "./routes/timetable.route.js";
 import homeworkRoutes from "./routes/homework.route.js";
-import feestructureRoutes from "./routes/feeStructure.js";
+import feestructureRoutes from "./routes/feeStructure.route.js";
 import feesRoutes from "./routes/fee.route.js";
 import paymentRoutes from "./routes/payment.route.js";
 

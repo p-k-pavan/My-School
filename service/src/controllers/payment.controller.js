@@ -1,9 +1,9 @@
 import mongoose from "mongoose";
-import asyncHandler from "../middleware/asyncHandler";
-import { Fee } from "../models/Fee";
-import { FeeTransaction } from "../models/payment.model";
-import { Student } from "../models/student.model";
-import AppError from "../utils/AppError";
+import asyncHandler from "../middleware/asyncHandler.js";
+import { Fee } from "../models/Fee.js";
+import { FeeTransaction } from "../models/payment.model.js";
+import { Student } from "../models/student.model.js";
+import AppError from "../utils/AppError.js";
 import PDFDocument from "pdfkit"; 
 import ExcelJS from "exceljs"; 
 

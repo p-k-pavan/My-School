@@ -10,8 +10,8 @@ import {
     voidFeePayment,
 } from "../controllers/payment.controller.js";
 
-import { isAuthenticated } from "../middleware/auth.middleware.js";
-import { authorizeRoles } from "../middleware/authorizeRoles.middleware.js";
+import { isAuthenticated } from "../middleware/TokenVerify.js";
+import { authorizeRoles } from "../middleware/role.middleware.js";
 
 const router = express.Router();
 router.use(isAuthenticated);
