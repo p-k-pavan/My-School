@@ -8,20 +8,6 @@ import PDFDocument from "pdfkit";
 import ExcelJS from "exceljs"; 
 
 
-const commitWithRetry = async (session) => {
-    while (true) {
-        try {
-            await session.commitTransaction();
-            return;
-        } catch (error) {
-            if (error.hasErrorLabel?.("TransientTransactionError")) {
-                continue;
-            }
-            throw error;
-        }
-    }
-};
-
 export const createFeePayment = asyncHandler(async (req, res) => {
     const {
         studentId,
@@ -47,14 +33,9 @@ export const createFeePayment = asyncHandler(async (req, res) => {
         throw new AppError( "Amount must be a positive number", 400 );
     }
 
-    const session = await mongoose.startSession();
-
-    try {
-        session.startTransaction();
-
         const [student, fee] = await Promise.all([
-            Student.findById(studentId).session(session),
-            Fee.findById(studentFeeId).session(session),
+            Student.findById(studentId),
+            Fee.findById(studentFeeId),
         ]);
 
         if (!student) {
@@ -80,8 +61,7 @@ export const createFeePayment = asyncHandler(async (req, res) => {
                 remarks,
                 paymentDate: new Date(),
                 collectedBy: req.user.id,
-            }],
-            { session }
+            }]
         );
 
         payment[0].receiptNo =
@@ -91,7 +71,7 @@ export const createFeePayment = asyncHandler(async (req, res) => {
                 .slice(-6)
                 .toUpperCase();
 
-        await payment[0].save({ session });
+        await payment[0].save();
 
         fee.paidAmount += amount;
 
@@ -102,22 +82,13 @@ export const createFeePayment = asyncHandler(async (req, res) => {
 
         fee.status = fee.dueAmount <= 0 ? "paid" : "partial";
 
-        await fee.save({ session });
-
-        await commitWithRetry(session);
+        await fee.save();
 
         return res.status(201).json({
             success: true,
             message: "Payment recorded successfully",
             payment: payment[0],
         });
-
-    } catch (error) {
-        await session.abortTransaction();
-        throw error;
-    } finally {
-        session.endSession();
-    }
 });
 
 export const getFeePaymentByStudentId = asyncHandler(async (req, res) => {
@@ -250,12 +221,7 @@ export const voidFeePayment = asyncHandler(async (req, res) => {
         throw new AppError("A reason is required to void a payment", 400);
     }
  
-    const session = await mongoose.startSession();
- 
-    try {
-        session.startTransaction();
- 
-        const payment = await FeeTransaction.findById(id).session(session);
+        const payment = await FeeTransaction.findById(id);
  
         if (!payment) {
             throw new AppError("Payment not found", 404);
@@ -265,7 +231,7 @@ export const voidFeePayment = asyncHandler(async (req, res) => {
             throw new AppError("Payment has already been voided", 400);
         }
  
-        const fee = await Fee.findById(payment.studentFeeId).session(session);
+        const fee = await Fee.findById(payment.studentFeeId);
  
         if (!fee) {
             throw new AppError("Associated fee record not found", 404);
@@ -285,28 +251,21 @@ export const voidFeePayment = asyncHandler(async (req, res) => {
             fee.status = "pending";
         }
  
-        await fee.save({ session });
+        await fee.save();
  
         payment.paymentStatus = "voided";
         payment.voidReason = reason;
         payment.voidedBy = req.user.id;
         payment.voidedAt = new Date();
  
-        await payment.save({ session });
- 
-        await commitWithRetry(session);
+        await payment.save();
+
  
         return res.status(200).json({
             success: true,
             message: "Payment voided successfully",
             payment,
         });
-    } catch (error) {
-        await session.abortTransaction();
-        throw error;
-    } finally {
-        session.endSession();
-    }
 });
  
 // downloadFeeReceipt

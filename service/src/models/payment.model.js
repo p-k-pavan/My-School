@@ -4,7 +4,7 @@ const feeTransactionSchema = new mongoose.Schema(
     {
         studentFeeId: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "StudentFee",
+            ref: "Fee",
             required: true,
             index: true,
         },
@@ -48,7 +48,7 @@ const feeTransactionSchema = new mongoose.Schema(
 
         paymentStatus: {
             type: String,
-            enum: ["success", "pending", "failed"],
+            enum: ["success", "pending", "failed", "voided"],
             default: "success",
         },
 

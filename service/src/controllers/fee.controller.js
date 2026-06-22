@@ -22,6 +22,7 @@ export const createFee = asyncHandler(async (req, res) => {
         feeStructureId,
         academicYear,
         discountAmount = 0,
+        dueDate,
     } = req.body;
 
     if (!studentId || !feeStructureId || !academicYear) {
@@ -75,6 +76,7 @@ export const createFee = asyncHandler(async (req, res) => {
     }
 
     const dueAmount = totalFee - discountAmount;
+    const parsedDueDate = dueDate ? new Date(dueDate) : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
 
     const fee = await Fee.create({
         studentId,
@@ -84,6 +86,7 @@ export const createFee = asyncHandler(async (req, res) => {
         paidAmount: 0,
         dueAmount,
         discountAmount,
+        dueDate: parsedDueDate,
         status: dueAmount === 0 ? "paid" : "pending",
     });
 
@@ -99,6 +102,7 @@ export const generateFeesForClass = asyncHandler(async (req, res) => {
         classId,
         feeStructureId,
         academicYear,
+        dueDate,
     } = req.body;
 
     if (!classId || !feeStructureId || !academicYear) {
@@ -133,7 +137,7 @@ export const generateFeesForClass = asyncHandler(async (req, res) => {
 
     const students = await Student.find({
         classId,
-        status: "active",
+        status: true,
     }).select("_id");
 
     if (students.length === 0) {
@@ -154,6 +158,8 @@ export const generateFeesForClass = asyncHandler(async (req, res) => {
         existingFees.map((f) => f.studentId.toString())
     );
 
+    const parsedDueDate = dueDate ? new Date(dueDate) : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+
     const feeRecords = students
         .filter(
             (student) =>
@@ -169,6 +175,7 @@ export const generateFeesForClass = asyncHandler(async (req, res) => {
             paidAmount: 0,
             dueAmount: feeStructure.totalFee,
             discountAmount: 0,
+            dueDate: parsedDueDate,
             status: "pending",
         }));
 
@@ -398,7 +405,7 @@ export const getFeeByClass = asyncHandler(async (req, res) => {
 
     const students = await Student.find({
         classId,
-        status: "active",
+        status: true,
     }).select("_id");
 
     const studentIds = students.map(
@@ -510,7 +517,7 @@ export const deleteFee = asyncHandler(async (req, res) => {
 
 // generateFeesForSchool
 export const generateFeesForSchool = asyncHandler(async (req, res) => {
-    const { academicYear, assignments } = req.body;
+    const { academicYear, assignments, dueDate } = req.body;
  
     if (!academicYear || !Array.isArray(assignments) || assignments.length === 0) {
         throw new AppError(
@@ -551,7 +558,7 @@ export const generateFeesForSchool = asyncHandler(async (req, res) => {
  
         const students = await Student.find({
             classId,
-            status: "active",
+            status: true,
         }).select("_id");
  
         if (students.length === 0) {
@@ -568,6 +575,8 @@ export const generateFeesForSchool = asyncHandler(async (req, res) => {
             existingFees.map((f) => f.studentId.toString())
         );
  
+        const parsedDueDate = dueDate ? new Date(dueDate) : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+
         const feeRecords = students
             .filter((s) => !existingStudentIds.has(s._id.toString()))
             .map((s) => ({
@@ -578,6 +587,7 @@ export const generateFeesForSchool = asyncHandler(async (req, res) => {
                 paidAmount: 0,
                 dueAmount: feeStructure.totalFee,
                 discountAmount: 0,
+                dueDate: parsedDueDate,
                 status: "pending",
             }));
  
