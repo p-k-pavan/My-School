@@ -13,6 +13,7 @@ import Students from './pages/Students'
 import Attendance from './pages/Attendance'
 import Subjects from './pages/Subjects'
 import Timetable from './pages/Timetable'
+import Homework from './pages/Homework'
 
 function App() {
   return (
@@ -35,6 +36,7 @@ function App() {
             <Route path="/attendance" element={<Attendance />} />
             <Route path="/subjects" element={<Subjects />} />
             <Route path="/timetable" element={<Timetable />} />
+            <Route path="/homework" element={<Homework />} />
           </Route>
 
         </Routes>

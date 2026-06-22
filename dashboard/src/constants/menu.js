@@ -1,4 +1,5 @@
 import { NewspaperIcon, TimelineIcon } from "lucide-react";
+import path from "node:path";
 import {
   LuBadge,
   LuBriefcase,
@@ -12,7 +13,8 @@ import {
   LuBuilding2,
   LuUserCheck,
   LuGalleryThumbnails,
-  LuCalendar
+  LuCalendar,
+  LuBook
 } from "react-icons/lu";
 
 export const menus = [
@@ -69,6 +71,20 @@ export const menus = [
     name: "Attendance",
     path: "/attendance",
     icon: LuBadge,
+    roles: ["management", "admin"],
+  },
+
+  {
+    name: "Timetable",
+    path: "/timetable",
+    icon: LuCalendar,
+    roles: ["management", "admin"],
+  },
+
+  {
+    name: "Homework",
+    path: "/homework",
+    icon: LuBook,
     roles: ["management", "admin", "teacher"],
   },
 
@@ -77,13 +93,6 @@ export const menus = [
     path: "/fees",
     icon: LuMedal,
     roles: ["management", "admin"],
-  },
-
-  {
-    name: "Timetable",
-    path: "/timetable",
-    icon: LuCalendar,
-    roles: ["management", "admin", "teacher"],
   },
 
   {

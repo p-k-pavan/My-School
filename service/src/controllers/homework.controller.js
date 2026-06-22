@@ -1,7 +1,10 @@
+import mongoose from "mongoose";
 import asyncHandler from "../middleware/asyncHandler.js";
 import { Homework } from "../models/homework.model.js";
 import { Student } from "../models/student.model.js";
 import { Teacher } from "../models/teacher.model.js";
+import { Class } from "../models/class.model.js";
+import Subject from "../models/subject.model.js";
 import AppError from "../utils/AppError.js";
 
 const getFileType = (mimeType) => {
@@ -73,12 +76,32 @@ export const createHomework = asyncHandler(async (req, res) => {
         );
     }
 
+    let dbTeacherId;
+    if (req.user.role === "teacher") {
+        const teacher = await Teacher.findOne({ userId: req.user.id });
+        if (!teacher) {
+            throw new AppError("Teacher profile not found", 404);
+        }
+        dbTeacherId = teacher._id;
+    } else {
+        const klass = await Class.findById(classId);
+        if (klass && klass.classTeacher) {
+            dbTeacherId = klass.classTeacher;
+        } else {
+            const anyTeacher = await Teacher.findOne();
+            if (!anyTeacher) {
+                throw new AppError("No teachers found in the system to assign homework", 400);
+            }
+            dbTeacherId = anyTeacher._id;
+        }
+    }
+
     const homework = await Homework.create({
         title,
         description,
         classId,
         subjectId,
-        teacherId: req.user.id,
+        teacherId: dbTeacherId,
         assignedDate: assigned,
         attachments,
         dueDate: due
@@ -113,7 +136,16 @@ export const updateHomework = asyncHandler(async (req, res) => {
         throw new AppError("Homework not found", 404);
     }
 
-    if (!homework.teacherId.equals(req.user.id)) {
+    const isManagementOrAdmin = ["admin", "management"].includes(req.user.role);
+    let isOwner = false;
+    if (req.user.role === "teacher") {
+        const teacher = await Teacher.findOne({ userId: req.user.id });
+        if (teacher && homework.teacherId.equals(teacher._id)) {
+            isOwner = true;
+        }
+    }
+
+    if (!isOwner && !isManagementOrAdmin) {
         throw new AppError(
             "You are not authorized to update this homework",
             403
@@ -166,8 +198,14 @@ export const deleteHomework = asyncHandler(async (req, res) => {
         throw new AppError("Homework not found", 404);
     }
 
-    const isOwner = homework.teacherId.equals(req.user.id);
-    const isManagement = req.user.role === "management";
+    const isManagement = req.user.role === "management" || req.user.role === "admin";
+    let isOwner = false;
+    if (req.user.role === "teacher") {
+        const teacher = await Teacher.findOne({ userId: req.user.id });
+        if (teacher && homework.teacherId.equals(teacher._id)) {
+            isOwner = true;
+        }
+    }
 
     if (!isOwner && !isManagement) {
         throw new AppError(
@@ -211,14 +249,33 @@ export const getHomeworkById = asyncHandler(async (req, res) => {
 //getHomeworkByClass
 export const getHomeworkByClass = asyncHandler(async (req, res) => {
     const { id } = req.params;
+    const { assignedDate } = req.query;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
-        throw new AppError("Invalid Class ID", 400);
+        throw new AppError(
+            "Invalid Class ID",
+            400
+        );
     }
 
-    const homework = await Homework.find({
+    const filter = {
         classId: id,
-    })
+    };
+
+    if (assignedDate) {
+        const startDate = new Date(assignedDate);
+        startDate.setHours(0, 0, 0, 0);
+
+        const endDate = new Date(assignedDate);
+        endDate.setHours(23, 59, 59, 999);
+
+        filter.assignedDate = {
+            $gte: startDate,
+            $lte: endDate,
+        };
+    }
+
+    const homework = await Homework.find(filter)
         .populate("teacherId", "teacherName")
         .populate("subjectId", "subjectName subjectCode")
         .sort({ assignedDate: -1 });
@@ -233,6 +290,7 @@ export const getHomeworkByClass = asyncHandler(async (req, res) => {
 //getStudentHomework
 export const getStudentHomework = asyncHandler(async (req, res) => {
     const { studentId } = req.params;
+    const { assignedDate } = req.query;
 
     if (!mongoose.Types.ObjectId.isValid(studentId)) {
         throw new AppError("Invalid Student ID", 400);
@@ -254,9 +312,24 @@ export const getStudentHomework = asyncHandler(async (req, res) => {
         );
     }
 
-    const homework = await Homework.find({
+    const filter = {
         classId: student.classId,
-    })
+    };
+
+    if (assignedDate) {
+        const startDate = new Date(assignedDate);
+        startDate.setHours(0, 0, 0, 0);
+
+        const endDate = new Date(assignedDate);
+        endDate.setHours(23, 59, 59, 999);
+
+        filter.assignedDate = {
+            $gte: startDate,
+            $lte: endDate,
+        };
+    }
+
+    const homework = await Homework.find(filter)
         .populate("teacherId", "teacherName")
         .populate("subjectId", "subjectName subjectCode")
         .sort({ assignedDate: -1 });
@@ -270,6 +343,7 @@ export const getStudentHomework = asyncHandler(async (req, res) => {
 
 //getHomeWorkByteacher
 export const getHomeworkByTeacher = asyncHandler(async (req, res) => {
+    const { assignedDate } = req.query;
     const teacher = await Teacher.findOne({
         userId: req.user.id,
     });
@@ -278,9 +352,24 @@ export const getHomeworkByTeacher = asyncHandler(async (req, res) => {
         throw new AppError("Teacher not found", 404);
     }
 
-    const homework = await Homework.find({
-        teacherId: teacher._id,
-    })
+    const filter = {
+        teacherId: teacher._id
+    };
+
+    if (assignedDate) {
+        const startDate = new Date(assignedDate);
+        startDate.setHours(0, 0, 0, 0);
+
+        const endDate = new Date(assignedDate);
+        endDate.setHours(23, 59, 59, 999);
+
+        filter.assignedDate = {
+            $gte: startDate,
+            $lte: endDate,
+        };
+    }
+
+    const homework = await Homework.find(filter)
         .populate("classId", "className section")
         .populate("subjectId", "subjectName subjectCode")
         .sort({ assignedDate: -1 });
