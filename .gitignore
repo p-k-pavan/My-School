@@ -33,7 +33,7 @@ app/.DS_Store
 app/*.pem
 
 # local env files
-app/.env*.local
+app/.env
 service/.env
 
 # typescript

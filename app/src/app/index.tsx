@@ -1,4 +1,4 @@
-import { Feather, FontAwesome, Ionicons } from "@expo/vector-icons";
+import { Feather, FontAwesome } from "@expo/vector-icons";
 import { useState } from "react";
 import {
   Image,
@@ -9,20 +9,80 @@ import {
   Text,
   TextInput,
   View,
+  Alert,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Redirect } from "expo-router";
-
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
+import { login as loginAction } from "@/redux/reducer/authReducer";
+import { useLoginMutation } from "@/redux/api/auth";
 
 export default function HomeScreen() {
-  const [selectedRole, setSelectedRole] = useState<"student" | "teacher">("student");
+  const dispatch = useAppDispatch();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
-  const login = true;
-  if(login) {
-    return <Redirect href="/dashboard" />
+
+  const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
+  const [loginMutation, { isLoading }] = useLoginMutation();
+
+  if (isAuthenticated) {
+    return <Redirect href="/dashboard" />;
   }
+
+  const validateForm = () => {
+    if (!email.trim()) {
+      Alert.alert("Error", "Email is required");
+      return false;
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      Alert.alert("Error", "Please enter a valid email address");
+      return false;
+    }
+
+    if (!password) {
+      Alert.alert("Error", "Password is required");
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleLogin = async () => {
+    if (!validateForm()) {
+      return;
+    }
+
+    try {
+      const res = await loginMutation({ email: email.trim(), password }).unwrap();
+      dispatch(loginAction(res.user));
+      Alert.alert("Success", "Login successful");
+    } catch (err: any) {
+      console.log("Login error:", err);
+      let errorMessage = "Something went wrong";
+
+      if (err.status) {
+        switch (err.status) {
+          case 401:
+            errorMessage = "Invalid email or password";
+            break;
+          case 404:
+            errorMessage = "Email not registered";
+            break;
+          case 500:
+            errorMessage = "Server error, please try again later";
+            break;
+          default:
+            errorMessage = err.data?.message || "Failed to log in";
+        }
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+      Alert.alert("Login Failed", errorMessage);
+    }
+  };
 
   return (
     <SafeAreaView className="flex-1 bg-white" edges={["top", "left", "right"]}>
@@ -44,7 +104,7 @@ export default function HomeScreen() {
               resizeMode="contain"
             />
             <View className="flex-row items-center mt-3">
-              <Text className="text-[28px] font-extrabold text-slate-800">Edu</Text>
+              <Text className="text-[28px] font-extrabold text-slate-800">Let'S</Text>
               <Text className="text-[28px] font-extrabold text-blue-600">Connect</Text>
             </View>
             <Text className="text-sm font-medium text-slate-400 tracking-wider mt-1">
@@ -61,51 +121,7 @@ export default function HomeScreen() {
             </Text>
           </View>
 
-          <View className="flex-row bg-slate-100  rounded-[22px] mb-6">
-            <Pressable
-              onPress={() => setSelectedRole("student")}
-              className={`flex-1 flex-row items-center justify-center py-3.5 rounded-[18px] gap-2 ${
-                selectedRole === "student"
-                  ? "bg-white border border-blue-500 shadow-sm"
-                  : ""
-              }`}
-            >
-              <FontAwesome
-                name="graduation-cap"
-                size={16}
-                color={selectedRole === "student" ? "#2563eb" : "#94a3b8"}
-              />
-              <Text
-                className={`text-[15px] font-bold ${
-                  selectedRole === "student" ? "text-blue-600" : "text-slate-400"
-                }`}
-              >
-                Student
-              </Text>
-            </Pressable>
 
-            <Pressable
-              onPress={() => setSelectedRole("teacher")}
-              className={`flex-1 flex-row items-center justify-center py-3.5 rounded-[18px] gap-2 ${
-                selectedRole === "teacher"
-                  ? "bg-white border border-blue-500 shadow-sm"
-                  : ""
-              }`}
-            >
-              <Ionicons
-                name="person"
-                size={16}
-                color={selectedRole === "teacher" ? "#2563eb" : "#94a3b8"}
-              />
-              <Text
-                className={`text-[15px] font-bold ${
-                  selectedRole === "teacher" ? "text-blue-600" : "text-slate-400"
-                }`}
-              >
-                Teacher
-              </Text>
-            </Pressable>
-          </View>
 
           <View className="gap-4">
             <View className="flex-row items-center bg-white border border-slate-200 rounded-[22px] px-4 py-4 shadow-sm">
@@ -113,7 +129,7 @@ export default function HomeScreen() {
               <TextInput
                 value={email}
                 onChangeText={setEmail}
-                placeholder={selectedRole === "student" ? "Email or Student ID" : "Email or Teacher ID"}
+                placeholder={"email"}
                 placeholderTextColor="#94a3b8"
                 className="flex-1 text-[15px] font-medium text-slate-800 p-0"
                 autoCapitalize="none"
@@ -151,9 +167,19 @@ export default function HomeScreen() {
           </View>
 
 
-          <Pressable className="flex-row items-center justify-center bg-blue-600 rounded-[22px] py-4 shadow-md shadow-blue-200 active:opacity-90">
-            <Feather name="log-in" size={18} color="white" className="mr-2.5" />
-            <Text className="text-white text-[16px] font-bold">Sign In</Text>
+          <Pressable 
+            onPress={handleLogin}
+            disabled={isLoading}
+            className={`flex-row items-center justify-center bg-blue-600 rounded-[22px] py-4 shadow-md shadow-blue-200 active:opacity-90 ${isLoading ? 'opacity-70' : ''}`}
+          >
+            {isLoading ? (
+              <ActivityIndicator size="small" color="#ffffff" className="mr-2" />
+            ) : (
+              <Feather name="log-in" size={18} color="white" className="mr-2.5" />
+            )}
+            <Text className="text-white text-[16px] font-bold">
+              {isLoading ? "Signing In..." : "Sign In"}
+            </Text>
           </Pressable>
 
 

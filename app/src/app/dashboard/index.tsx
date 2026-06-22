@@ -2,6 +2,7 @@ import { AntDesign, FontAwesome6, Ionicons } from "@expo/vector-icons";
 import { Image, Pressable, ScrollView, StatusBar, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useDrawer } from "@/context/DrawerContext";
+import {  useAppSelector } from "@/redux/hooks";
 
 const OVERVIEW = [
   { icon: <FontAwesome6 name="book-open" size={18} color="#1E88E5" />, bg: "bg-blue-50", value: "3", label: "Homework due", badge: "2 pending", badgeColor: "bg-red-50 text-red-700" },
@@ -23,6 +24,8 @@ const UPDATES = [
 ];
 
 export default function Dashboard() {
+  const user = useAppSelector((state) => state.auth.user);
+  console.log(user);
   const { openDrawer } = useDrawer();
   return (
     <SafeAreaView className="flex-1 bg-slate-100" edges={["top", "left", "right"]}>
