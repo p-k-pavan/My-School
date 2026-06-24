@@ -19,7 +19,7 @@ router.get(
 router.get(
     "/:id",
     isAuthenticated,
-    authorizeRoles("teacher", "admin", "management"),
+    authorizeRoles("teacher", "admin", "management", "parent"),
     getStudentById
 );
 

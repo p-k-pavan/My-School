@@ -2,7 +2,7 @@ import express from "express";
 
 import { isAuthenticated } from "../middleware/TokenVerify.js";
 import { authorizeRoles } from "../middleware/role.middleware.js";
-import { assignClassesToTeacher, bulkUploadTeacher, changeTeacherStatus, createTeacher, getAllTeachers, getTeacherById, getTeacherClasses, removeClassFromTeacher, updateTeacher } from "../controllers/teacher.controller.js";
+import { assignClassesToTeacher, bulkUploadTeacher, changeTeacherStatus, createTeacher, getAllTeachers, getTeacherById, getTeacherByUserId, getTeacherClasses, removeClassFromTeacher, updateTeacher } from "../controllers/teacher.controller.js";
 import { upload } from "../middleware/multer.js";
 
 
@@ -35,6 +35,13 @@ router.get(
     isAuthenticated,
     authorizeRoles("admin", "management"),
     getTeacherById
+);
+
+router.get(
+    "/user/:userId",
+    isAuthenticated,
+    authorizeRoles("admin", "management", "teacher"),
+    getTeacherByUserId
 );
 
 router.put(

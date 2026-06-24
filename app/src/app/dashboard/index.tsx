@@ -20,11 +20,13 @@ export default function Dashboard() {
   const parentId = isParent ? String((user as any).id) : undefined;
   const { data, isLoading } = useGetParentsByUserIdQuery(parentId as string | undefined, { skip: !isParent || !parentId });
 
-  const student = data?.parent?.studentIds?.[0];
+  const selectedStudentId = useAppSelector((state) => state.auth.selectedStudentId);
+  const studentIds = data?.parent?.studentIds || [];
+  const student = studentIds.find((s: any) => s._id === selectedStudentId) || studentIds[0];
   const studentName = student?.studentName || "John Doe";
   const classInfo = student?.classId
     ? `Class ${student.classId.className}${student.classId.section || ""}`
-    : "Class 10A  •  Roll No: 123";
+    : "";
 
   const classId = student?.classId?._id;
   const { data: tt } = useGetTimetableByClassQuery(

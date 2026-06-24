@@ -80,7 +80,9 @@ export default function TimetableDetail() {
     { skip: !isParent || !parentId }
   );
 
-  const student = parentData?.parent?.studentIds?.[0];
+  const selectedStudentId = useAppSelector((state) => state.auth.selectedStudentId);
+  const studentIds = parentData?.parent?.studentIds || [];
+  const student = studentIds.find((s: any) => s._id === selectedStudentId) || studentIds[0];
   const classId = student?.classId?._id;
   const academicYear = "2026-2027";
 

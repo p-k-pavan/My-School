@@ -4,6 +4,7 @@ const initialState = {
     user: null,
     token: null,
     isAuthenticated: false,
+    selectedStudentId: null,
 };
 
 const authSlice = createSlice({
@@ -26,9 +27,14 @@ const authSlice = createSlice({
             state.user = null;
             state.token = null;
             state.isAuthenticated = false;
+            state.selectedStudentId = null;
+        },
+
+        setSelectedStudentId: (state, action) => {
+            state.selectedStudentId = action.payload;
         },
     },
 });
 
-export const { login, logout } = authSlice.actions;
+export const { login, logout, setSelectedStudentId } = authSlice.actions;
 export default authSlice.reducer;

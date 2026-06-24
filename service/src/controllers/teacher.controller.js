@@ -5,6 +5,7 @@ import { Teacher } from "../models/teacher.model.js";
 import { User } from "../models/user.model.js";
 import { generatePassword } from "../utils/genaratePassword.js";
 import { Class } from "../models/class.model.js";
+import mongoose from "mongoose";
 
 export const createTeacher = asyncHandler(async (req, res) => {
     const {
@@ -305,6 +306,27 @@ export const getTeacherById = asyncHandler(async (req, res) => {
 }
 );
 
+export const getTeacherByUserId = asyncHandler(async (req, res) => {
+    const { userId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+        throw new AppError("Invalid User ID", 400);
+    }
+
+    const teacher = await Teacher.findOne({ userId })
+        .populate("assignedClasses", "className section");
+
+    if (!teacher) {
+        throw new AppError("Teacher not found", 404);
+    }
+
+    return res.status(200).json({
+        success: true,
+        message: "Teacher fetched successfully",
+        teacher,
+    });
+});
+
 export const updateTeacher = asyncHandler(
     async (req, res) => {
         const { id } = req.params;
@@ -469,34 +491,34 @@ export const assignClassesToTeacher = asyncHandler(
 );
 
 export const removeClassFromTeacher = asyncHandler(async (req, res) => {
-        const { id, classId } =
-            req.params;
+    const { id, classId } =
+        req.params;
 
-        const teacher =
-            await Teacher.findById(id);
+    const teacher =
+        await Teacher.findById(id);
 
-        if (!teacher) {
-            throw new AppError(
-                "Teacher not found",
-                404
-            );
-        }
+    if (!teacher) {
+        throw new AppError(
+            "Teacher not found",
+            404
+        );
+    }
 
-        teacher.assignedClasses =
-            teacher.assignedClasses.filter(
-                assignedClass =>
-                    assignedClass.toString() !==
-                    classId
-            );
+    teacher.assignedClasses =
+        teacher.assignedClasses.filter(
+            assignedClass =>
+                assignedClass.toString() !==
+                classId
+        );
 
-        await teacher.save();
+    await teacher.save();
 
-        res.status(200).json({
-            success: true,
-            message: "Class removed successfully",
-            teacher,
-        });
+    res.status(200).json({
+        success: true,
+        message: "Class removed successfully",
+        teacher,
     });
+});
 
 export const getTeacherClasses = asyncHandler(async (req, res) => {
     const { id } = req.params;
@@ -509,12 +531,12 @@ export const getTeacherClasses = asyncHandler(async (req, res) => {
             );
 
     if (!teacher) {
-        throw new AppError( "Teacher not found", 404 );
+        throw new AppError("Teacher not found", 404);
     }
 
     res.status(200).json({
-        success : true,
-        count : teacher.assignedClasses.length,
-        classes : teacher.assignedClasses,
+        success: true,
+        count: teacher.assignedClasses.length,
+        classes: teacher.assignedClasses,
     });
 });

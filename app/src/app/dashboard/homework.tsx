@@ -74,7 +74,9 @@ export default function AllHomework() {
     { skip: !isParent || !parentId }
   );
 
-  const student = parentData?.parent?.studentIds?.[0];
+  const selectedStudentId = useAppSelector((state) => state.auth.selectedStudentId);
+  const studentIds = parentData?.parent?.studentIds || [];
+  const student = studentIds.find((s: any) => s._id === selectedStudentId) || studentIds[0];
   const classId = student?.classId?._id;
 
   const [assignedDate, setAssignedDate] = useState(() => new Date().toISOString().split("T")[0]);
