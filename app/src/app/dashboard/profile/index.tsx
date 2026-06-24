@@ -4,9 +4,15 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useAppSelector } from "@/redux/hooks";
 import ParentProfile from "@/components/profile/ParentProfile";
 import TeacherProfile from "@/components/profile/TeacherProfile";
+import { Redirect } from "expo-router";
 
 export default function Profile() {
   const user = useAppSelector((state) => state.auth.user);
+
+  if (!user) {
+    return <Redirect href="/" />;
+  }
+
   const isTeacher = (user as any)?.role === "teacher";
 
   return (

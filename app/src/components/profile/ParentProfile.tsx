@@ -1,10 +1,12 @@
 import React, { useState } from "react";
-import { ScrollView, View, Text, Image, Pressable, ActivityIndicator } from "react-native";
+import { ScrollView, View, Text, Image, Pressable, ActivityIndicator, Alert } from "react-native";
 import { useGetParentsByUserIdQuery } from "@/redux/api/parent";
 import { useGetStudentByIdQuery } from "@/redux/api/student";
 import { useAppSelector, useAppDispatch } from "@/redux/hooks";
-import { setSelectedStudentId } from "@/redux/reducer/authReducer";
+import { setSelectedStudentId, logout } from "@/redux/reducer/authReducer";
 import { AntDesign, Ionicons, MaterialIcons } from "@expo/vector-icons";
+import { router } from "expo-router";
+import { useLogoutMutation } from "@/redux/api/auth";
 
 interface ParentProfileProps {
   userId: string;
@@ -27,6 +29,31 @@ const formatDob = (dateStr?: string) => {
 export default function ParentProfile({ userId }: ParentProfileProps) {
   const dispatch = useAppDispatch();
   const selectedStudentId = useAppSelector((state) => state.auth.selectedStudentId);
+  const [logoutMutation] = useLogoutMutation();
+
+  const handleLogout = () => {
+    Alert.alert(
+      "Logout",
+      "Are you sure you want to logout?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Logout",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await logoutMutation(undefined).unwrap();
+            } catch (err) {
+              console.log("Backend logout failed:", err);
+            } finally {
+              dispatch(logout());
+              router.replace("/");
+            }
+          },
+        },
+      ]
+    );
+  };
 
   const { data: parentData, isLoading: isParentLoading } = useGetParentsByUserIdQuery(userId);
 
@@ -256,13 +283,16 @@ export default function ParentProfile({ userId }: ParentProfileProps) {
             <Text className="text-[14px] font-bold text-blue-900">Settings</Text>
           </View>
 
-          <View className="flex-row items-center justify-between py-2">
+          <Pressable 
+            onPress={handleLogout}
+            className="flex-row items-center justify-between py-2 active:bg-slate-50"
+          >
             <View className="flex-row items-center gap-2">
               <AntDesign name="login" size={16} color="red" />
               <Text className="text-[12.5px] text-slate-500">Logout</Text>
             </View>
             <AntDesign name="right-circle" size={16} color="gray" />
-          </View>
+          </Pressable>
 
           <View className="flex-row items-center justify-between py-2 border-t border-slate-50">
             <View className="flex-row items-center gap-2">
