@@ -6,6 +6,8 @@ import { Student } from "../models/student.model.js";
 import { Class } from "../models/class.model.js";
 import AppError from "../utils/AppError.js";
 import ExcelJS from "exceljs";
+import { Parent } from "../models/parent.model.js";
+import { FeeTransaction } from "../models/payment.model.js";
 
 
 const computeLiveStatus = (fee) => {
@@ -331,7 +333,7 @@ export const getFeeById = asyncHandler(async (req, res) => {
 
 export const getFeeByStudent = asyncHandler(async (req, res) => {
     const { studentId } = req.params;
-    const { academicYear } = req.query;
+    const academicYear = req.query.academicYear || "2026-2027";
 
     if (!mongoose.Types.ObjectId.isValid(studentId)) {
         throw new AppError("Invalid Student ID", 400
@@ -345,10 +347,18 @@ export const getFeeByStudent = asyncHandler(async (req, res) => {
         );
     }
 
+    const parent = await Parent.findOne({
+        userId: req.user.id,
+    });
+
+    if (!parent) {
+        throw new AppError("Parent not found", 404);
+    }
+
     if (req.user.role === "parent" &&
-        student.parentId.toString() !== req.user.id.toString()) {
+        student.parentId.toString() !== parent._id.toString()) {
         throw new AppError(
-            "You are not authorized to access this student's fee details",
+            `You are not authorized to access this student's fee details `,
             403
         );
     }
@@ -358,34 +368,21 @@ export const getFeeByStudent = asyncHandler(async (req, res) => {
         query.academicYear = academicYear;
     }
 
-    const fees = await Fee.find(query)
-        .populate({
-            path: "studentId",
-            select: "admissionNo studentName rollNo classId",
-            populate: {
-                path: "classId",
-                select: "className section",
-            },
-        })
-        .populate(
-            "feeStructureId",
-            "academicYear classLevel totalFee"
-        )
-        .sort({ academicYear: -1 });
+    const fees = await Fee.findOne(query)
+    .populate("feeStructureId","academicYear tuitionFee examFee libraryFee miscellaneousFee otherFee totalFee");
 
-    if (fees.length === 0) {
-        throw new AppError("Fee details not found", 404
-        );
+    if (!fees) {
+        throw new AppError("Fee details not found", 404);
     }
+
+    const transcation = await FeeTransaction.find({ studentFeeId: fees._id });
 
     return res.status(200).json({
         success: true,
         message: "Fee fetched successfully",
-        count: fees.length,
-        fees: fees.map((fee) => ({
-            ...fee.toObject(),
-            status: computeLiveStatus(fee),
-        })),
+        transcation,
+            fees,
+            status: computeLiveStatus(fees),
     });
 });
 
@@ -518,14 +515,14 @@ export const deleteFee = asyncHandler(async (req, res) => {
 // generateFeesForSchool
 export const generateFeesForSchool = asyncHandler(async (req, res) => {
     const { academicYear, assignments, dueDate } = req.body;
- 
+
     if (!academicYear || !Array.isArray(assignments) || assignments.length === 0) {
         throw new AppError(
             "academicYear and a non-empty assignments array (classId + feeStructureId pairs) are required",
             400
         );
     }
- 
+
     for (const a of assignments) {
         if (
             !a.classId || !a.feeStructureId ||
@@ -538,43 +535,43 @@ export const generateFeesForSchool = asyncHandler(async (req, res) => {
             );
         }
     }
- 
+
     const feeStructureIds = [...new Set(assignments.map((a) => a.feeStructureId))];
     const feeStructures = await FeeStructure.find({ _id: { $in: feeStructureIds } });
     const structureMap = new Map(
         feeStructures.map((fs) => [fs._id.toString(), fs])
     );
- 
+
     const results = [];
     let totalGenerated = 0;
- 
+
     for (const { classId, feeStructureId } of assignments) {
         const feeStructure = structureMap.get(feeStructureId.toString());
- 
+
         if (!feeStructure) {
             results.push({ classId, generated: 0, error: "Fee structure not found" });
             continue;
         }
- 
+
         const students = await Student.find({
             classId,
             status: true,
         }).select("_id");
- 
+
         if (students.length === 0) {
             results.push({ classId, generated: 0, error: "No active students in class" });
             continue;
         }
- 
+
         const existingFees = await Fee.find({
             academicYear,
             studentId: { $in: students.map((s) => s._id) },
         }).select("studentId");
- 
+
         const existingStudentIds = new Set(
             existingFees.map((f) => f.studentId.toString())
         );
- 
+
         const parsedDueDate = dueDate ? new Date(dueDate) : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
 
         const feeRecords = students
@@ -590,11 +587,11 @@ export const generateFeesForSchool = asyncHandler(async (req, res) => {
                 dueDate: parsedDueDate,
                 status: "pending",
             }));
- 
+
         if (feeRecords.length > 0) {
             await Fee.insertMany(feeRecords, { ordered: false });
         }
- 
+
         totalGenerated += feeRecords.length;
         results.push({
             classId,
@@ -602,7 +599,7 @@ export const generateFeesForSchool = asyncHandler(async (req, res) => {
             skippedAlreadyAssigned: students.length - feeRecords.length,
         });
     }
- 
+
     return res.status(201).json({
         success: true,
         message: `${totalGenerated} fee record(s) generated across ${assignments.length} class(es)`,
@@ -610,14 +607,14 @@ export const generateFeesForSchool = asyncHandler(async (req, res) => {
         results,
     });
 });
- 
+
 // getFeeDashboard 
 export const getFeeDashboard = asyncHandler(async (req, res) => {
     const { academicYear, classId } = req.query;
- 
+
     const matchStage = {};
     if (academicYear) matchStage.academicYear = academicYear;
- 
+
     if (classId) {
         if (!mongoose.Types.ObjectId.isValid(classId)) {
             throw new AppError("Invalid Class ID", 400);
@@ -625,9 +622,9 @@ export const getFeeDashboard = asyncHandler(async (req, res) => {
         const students = await Student.find({ classId }).select("_id");
         matchStage.studentId = { $in: students.map((s) => s._id) };
     }
- 
+
     const today = new Date();
- 
+
     const [summary] = await Fee.aggregate([
         { $match: matchStage },
         {
@@ -689,7 +686,7 @@ export const getFeeDashboard = asyncHandler(async (req, res) => {
             },
         },
     ]);
- 
+
     if (!summary) {
         return res.status(200).json({
             success: true,
@@ -706,32 +703,32 @@ export const getFeeDashboard = asyncHandler(async (req, res) => {
             },
         });
     }
- 
+
     delete summary._id;
     summary.collectionPercentage =
         summary.totalExpected > 0
             ? Number(
-                  ((summary.totalCollected / summary.totalExpected) * 100).toFixed(2)
-              )
+                ((summary.totalCollected / summary.totalExpected) * 100).toFixed(2)
+            )
             : 0;
- 
+
     return res.status(200).json({
         success: true,
         summary,
     });
 });
- 
+
 // getDefaulters — students with overdue, unpaid balances
 export const getDefaulters = asyncHandler(async (req, res) => {
     const { academicYear, classId, page = 1, limit = 20 } = req.query;
- 
+
     const filter = {
         dueAmount: { $gt: 0 },
         dueDate: { $lt: new Date() },
     };
- 
+
     if (academicYear) filter.academicYear = academicYear;
- 
+
     if (classId) {
         if (!mongoose.Types.ObjectId.isValid(classId)) {
             throw new AppError("Invalid Class ID", 400);
@@ -739,9 +736,9 @@ export const getDefaulters = asyncHandler(async (req, res) => {
         const students = await Student.find({ classId }).select("_id");
         filter.studentId = { $in: students.map((s) => s._id) };
     }
- 
+
     const total = await Fee.countDocuments(filter);
- 
+
     const defaulters = await Fee.find(filter)
         .populate({
             path: "studentId",
@@ -752,7 +749,7 @@ export const getDefaulters = asyncHandler(async (req, res) => {
         .skip((Number(page) - 1) * Number(limit))
         .limit(Number(limit))
         .lean();
- 
+
     return res.status(200).json({
         success: true,
         count: defaulters.length,
@@ -767,14 +764,14 @@ export const getDefaulters = asyncHandler(async (req, res) => {
         })),
     });
 });
- 
+
 export const exportFeesToExcel = asyncHandler(async (req, res) => {
     const { academicYear, classId, status } = req.query;
- 
+
     const filter = {};
     if (academicYear) filter.academicYear = academicYear;
     if (status) filter.status = status;
- 
+
     if (classId) {
         if (!mongoose.Types.ObjectId.isValid(classId)) {
             throw new AppError("Invalid Class ID", 400);
@@ -782,7 +779,7 @@ export const exportFeesToExcel = asyncHandler(async (req, res) => {
         const students = await Student.find({ classId }).select("_id");
         filter.studentId = { $in: students.map((s) => s._id) };
     }
- 
+
     const fees = await Fee.find(filter)
         .populate({
             path: "studentId",
@@ -790,10 +787,10 @@ export const exportFeesToExcel = asyncHandler(async (req, res) => {
             populate: { path: "classId", select: "className section" },
         })
         .lean();
- 
+
     const workbook = new ExcelJS.Workbook();
     const sheet = workbook.addWorksheet("Fees");
- 
+
     sheet.columns = [
         { header: "Admission No", key: "admissionNo", width: 15 },
         { header: "Student Name", key: "studentName", width: 25 },
@@ -805,7 +802,7 @@ export const exportFeesToExcel = asyncHandler(async (req, res) => {
         { header: "Due", key: "dueAmount", width: 12 },
         { header: "Status", key: "status", width: 12 },
     ];
- 
+
     fees.forEach((fee) => {
         sheet.addRow({
             admissionNo: fee.studentId?.admissionNo || "-",
@@ -821,9 +818,9 @@ export const exportFeesToExcel = asyncHandler(async (req, res) => {
             status: fee.status,
         });
     });
- 
+
     sheet.getRow(1).font = { bold: true };
- 
+
     res.setHeader(
         "Content-Type",
         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
@@ -832,7 +829,7 @@ export const exportFeesToExcel = asyncHandler(async (req, res) => {
         "Content-Disposition",
         `attachment; filename=fees-export-${Date.now()}.xlsx`
     );
- 
+
     await workbook.xlsx.write(res);
     res.end();
 });

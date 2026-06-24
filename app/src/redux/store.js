@@ -12,6 +12,7 @@ import {timetableApi} from "./api/timetable";
 import {homeworkApi} from "./api/homework";
 import {studentApi} from "./api/student";
 import {teacherApi} from "./api/teacher";
+import {feesApi} from "./api/fees"
 
 const persistConfig = {
   key: "root",
@@ -26,7 +27,8 @@ const rootReducer = combineReducers({
   [timetableApi.reducerPath]: timetableApi.reducer,
   [homeworkApi.reducerPath]: homeworkApi.reducer,
   [studentApi.reducerPath]: studentApi.reducer,
-  [teacherApi.reducerPath]: teacherApi.reducer
+  [teacherApi.reducerPath]: teacherApi.reducer,
+  [feesApi.reducerPath]: feesApi.reducer
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
@@ -51,6 +53,7 @@ export const store = configureStore({
     .concat(homeworkApi.middleware)
     .concat(studentApi.middleware)
     .concat(teacherApi.middleware)
+    .concat(feesApi.middleware)
 
 });
 
