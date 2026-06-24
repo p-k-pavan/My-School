@@ -8,8 +8,8 @@ const getBaseUrl = () => {
     return Platform.OS === "android" ? "http://192.168.31.144:5000/api" : "http://192.168.31.144:5000/api";
 };
 
-export const authApi = createApi({
-    reducerPath: "authApi",
+export const parentApi = createApi({
+    reducerPath: "parentApi",
     baseQuery: fetchBaseQuery({
         baseUrl: getBaseUrl(),
         prepareHeaders: (headers, { getState }) => {
@@ -21,19 +21,16 @@ export const authApi = createApi({
         },
         credentials: "include",
     }),
-    tagTypes: ["User"],
+    tagTypes: ["Parents"],
 
     endpoints: (builder) => ({
-        login: builder.mutation({
-            query: (formData) => ({
-                url: "/auth/login",
-                method: "POST",
-                body: formData,
-            }),
+        getParentsByUserId: builder.query({
+            query: (parentId) => `/parent/user/${parentId}`,
+            providesTags: ["Parents"],
         }),
     }),
 });
 
 export const {
-    useLoginMutation
-} = authApi;
+    useGetParentsByUserIdQuery
+} = parentApi;

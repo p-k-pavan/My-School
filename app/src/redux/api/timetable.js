@@ -8,8 +8,8 @@ const getBaseUrl = () => {
     return Platform.OS === "android" ? "http://192.168.31.144:5000/api" : "http://192.168.31.144:5000/api";
 };
 
-export const authApi = createApi({
-    reducerPath: "authApi",
+export const timetableApi = createApi({
+    reducerPath: "timetableApi",
     baseQuery: fetchBaseQuery({
         baseUrl: getBaseUrl(),
         prepareHeaders: (headers, { getState }) => {
@@ -21,19 +21,19 @@ export const authApi = createApi({
         },
         credentials: "include",
     }),
-    tagTypes: ["User"],
+    tagTypes: ["Timetables"],
 
     endpoints: (builder) => ({
-        login: builder.mutation({
-            query: (formData) => ({
-                url: "/auth/login",
-                method: "POST",
-                body: formData,
+        getTimetableByClass: builder.query({
+            query: ({ classId, ...params }) => ({
+                url: `/timetable/class/${classId}`,
+                params,
             }),
+            providesTags: ["Timetables"],
         }),
     }),
 });
 
 export const {
-    useLoginMutation
-} = authApi;
+    useGetTimetableByClassQuery
+} = timetableApi;

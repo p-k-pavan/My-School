@@ -8,8 +8,8 @@ const getBaseUrl = () => {
     return Platform.OS === "android" ? "http://192.168.31.144:5000/api" : "http://192.168.31.144:5000/api";
 };
 
-export const authApi = createApi({
-    reducerPath: "authApi",
+export const homeworkApi = createApi({
+    reducerPath: "homeworkApi",
     baseQuery: fetchBaseQuery({
         baseUrl: getBaseUrl(),
         prepareHeaders: (headers, { getState }) => {
@@ -21,19 +21,21 @@ export const authApi = createApi({
         },
         credentials: "include",
     }),
-    tagTypes: ["User"],
+    tagTypes: ["Homework"],
 
     endpoints: (builder) => ({
-        login: builder.mutation({
-            query: (formData) => ({
-                url: "/auth/login",
-                method: "POST",
-                body: formData,
+        getHomeworkByClass: builder.query({
+            query: ({ classId, assigned }) => ({
+                url: `/homework/class/${classId}`,
+                params: {
+                    assignedDate: assigned,
+                },
             }),
+            providesTags: ["Homework"],
         }),
     }),
 });
 
 export const {
-    useLoginMutation
-} = authApi;
+    useGetHomeworkByClassQuery
+} = homeworkApi;
