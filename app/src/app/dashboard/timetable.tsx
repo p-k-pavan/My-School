@@ -108,7 +108,6 @@ export default function TimetableDetail() {
     <SafeAreaView className="flex-1 bg-slate-100" edges={["top", "left", "right"]}>
       <StatusBar backgroundColor="#1E88E5" barStyle="light-content" />
 
-      {/* ── Custom Header with Back Button ── */}
       <View className="flex-row items-center px-4 py-3.5 bg-white border-b border-slate-200">
         <TouchableOpacity onPress={() => router.back()} className="mr-3 p-1 rounded-full active:bg-slate-100">
           <Ionicons name="arrow-back" size={22} color="#1E88E5" />
@@ -123,7 +122,6 @@ export default function TimetableDetail() {
         </View>
       </View>
 
-      {/* ── Day Tab Bar Selector ── */}
       <View className="bg-white border-b border-slate-200">
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 12, paddingVertical: 10 }}>
           {DAYS_OF_WEEK.map((day) => {
@@ -152,7 +150,6 @@ export default function TimetableDetail() {
         </ScrollView>
       </View>
 
-      {/* ── Content ── */}
       {isLoading ? (
         <View className="flex-1 justify-center items-center">
           <ActivityIndicator size="large" color="#1E88E5" />

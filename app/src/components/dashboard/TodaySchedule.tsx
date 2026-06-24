@@ -104,13 +104,11 @@ export default function TodaySchedule({ timetable }: TodayScheduleProps) {
   const todayPeriods = todayTimetable?.periods || [];
   const sortedPeriods = [...todayPeriods].sort((a, b) => a.periodNo - b.periodNo);
 
-  // 1. Get status for each period
   const periodsWithStatus = sortedPeriods.map((p) => {
     const statusInfo = getPeriodStatus(p.startTime, p.endTime);
     return { ...p, ...statusInfo };
   });
 
-  // 2. Find ongoing period
   const ongoingIndex = periodsWithStatus.findIndex((p) => p.status === "Ongoing");
 
   let displayedPeriods: typeof periodsWithStatus = [];

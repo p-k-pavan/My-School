@@ -77,10 +77,8 @@ export default function AllHomework() {
   const student = parentData?.parent?.studentIds?.[0];
   const classId = student?.classId?._id;
 
-  // Initialize assignedDate state with today's date formatted as YYYY-MM-DD
   const [assignedDate, setAssignedDate] = useState(() => new Date().toISOString().split("T")[0]);
 
-  // Fetch homework filtered by the selected assignedDate
   const { data: hwData, isLoading: isHomeworkLoading } = useGetHomeworkByClassQuery(
     { classId, assigned: assignedDate },
     { skip: !classId }
@@ -99,7 +97,6 @@ export default function AllHomework() {
     <SafeAreaView className="flex-1 bg-slate-100" edges={["top", "left", "right"]}>
       <StatusBar backgroundColor="#1E88E5" barStyle="light-content" />
 
-      {/* ── Custom Header with Back Button ── */}
       <View className="flex-row items-center px-4 py-3.5 bg-white border-b border-slate-200">
         <TouchableOpacity onPress={() => router.back()} className="mr-3 p-1 rounded-full active:bg-slate-100">
           <Ionicons name="arrow-back" size={22} color="#1E88E5" />
@@ -114,7 +111,6 @@ export default function AllHomework() {
         </View>
       </View>
 
-      {/* ── Date Navigator Bar ── */}
       <View className="flex-row justify-between items-center bg-white px-4 py-2.5 border-b border-slate-200">
         <TouchableOpacity 
           onPress={() => changeDate(-1)} 
@@ -138,7 +134,6 @@ export default function AllHomework() {
         </TouchableOpacity>
       </View>
 
-      {/* ── Content ── */}
       {isLoading ? (
         <View className="flex-1 justify-center items-center">
           <ActivityIndicator size="large" color="#1E88E5" />
