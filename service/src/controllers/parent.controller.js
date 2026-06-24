@@ -112,10 +112,42 @@ export const getParentById = asyncHandler(async (req, res) => {
     }
 
     const parent = await Parent.findById(id)
-        .populate(
-            "userId",
-            "name email mobile role status"
-        );
+        .populate({
+            path: "studentIds",
+            select: "studentName admissionNo rollNo classId",
+            populate: {
+                path: "classId",
+                select: "className section",
+            },
+        })
+
+    if (!parent) {
+        throw new AppError("Parent not found", 404);
+    }
+
+    res.status(200).json({
+        success: true,
+        message: "Parent fetched successfully",
+        parent,
+    });
+});
+
+export const getParentByUserId = asyncHandler(async (req, res) => {
+    const { userId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+        throw new AppError("Invalid Parent ID", 400);
+    }
+
+    const parent = await Parent.findOne({userId})
+        .populate({
+            path: "studentIds",
+            select: "studentName admissionNo rollNo classId",
+            populate: {
+                path: "classId",
+                select: "className section",
+            },
+        })
 
     if (!parent) {
         throw new AppError("Parent not found", 404);

@@ -33,7 +33,7 @@ router.get(
 router.get(
     "/parent/:parentId",
     isAuthenticated,
-    authorizeRoles("teacher", "admin", "management"),
+    authorizeRoles("parent", "admin", "management"),
     getStudentsByParent
 );
 

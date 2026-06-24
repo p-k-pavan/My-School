@@ -57,7 +57,7 @@ export default function HomeScreen() {
 
     try {
       const res = await loginMutation({ email: email.trim(), password }).unwrap();
-      dispatch(loginAction(res.user));
+      dispatch(loginAction({ user: res.user, token: res.token }));
       Alert.alert("Success", "Login successful");
     } catch (err: any) {
       console.log("Login error:", err);

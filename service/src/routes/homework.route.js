@@ -53,7 +53,7 @@ router.get(
 
 router.get(
     "/class/:id",
-    authorizeRoles("admin", "management", "teacher"),
+    authorizeRoles("admin", "management", "teacher", "parent"),
     getHomeworkByClass
 );
 

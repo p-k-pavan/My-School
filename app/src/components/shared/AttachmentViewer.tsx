@@ -1,0 +1,131 @@
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  FlatList,
+  Alert,
+  Platform,
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import * as Linking from "expo-linking";
+import * as WebBrowser from "expo-web-browser";
+
+interface Attachment {
+  _id?: string;
+  fileName: string;
+  fileUrl: string;
+  fileType?: string;
+}
+
+interface AttachmentViewerProps {
+  attachments: Attachment[];
+}
+
+const AttachmentViewer: React.FC<AttachmentViewerProps> = ({
+  attachments,
+}) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const openFile = async (filePath: string) => {
+    try {
+      const baseUrl = process.env.EXPO_PUBLIC_API_BASE_FILEURL || 
+                      process.env.EXPO_PUBLIC_API_BASE_URL?.replace("/api", "") || 
+                      "http://192.168.31.144:5000";
+      const url = `${baseUrl}/${filePath}`;
+      
+      if (Platform.OS === "web") {
+        if (typeof window !== "undefined") {
+          window.open(url, "_blank");
+        } else {
+          await Linking.openURL(url);
+        }
+      } else {
+        try {
+          await WebBrowser.openBrowserAsync(url);
+        } catch {
+          await Linking.openURL(url);
+        }
+      }
+    } catch {
+      Alert.alert("Error", "Unable to open this file.");
+    }
+  };
+
+  const getIcon = (fileType?: string) => {
+    if (!fileType) return "document-outline";
+
+    if (fileType.includes("pdf")) return "document-text-outline";
+    if (fileType.includes("image")) return "image-outline";
+    if (fileType.includes("video")) return "videocam-outline";
+
+    return "document-outline";
+  };
+
+  if (!attachments?.length) return null;
+
+  return (
+    <View className="mt-1">
+      <TouchableOpacity
+        onPress={() => setIsExpanded(!isExpanded)}
+        className="flex-row items-center justify-between bg-slate-50 border border-slate-100 rounded-lg p-2 mb-1.5"
+        style={{ activeOpacity: 0.7 } as any}
+      >
+        <View className="flex-row items-center gap-1.5">
+          <Ionicons
+            name="document-attach-outline"
+            size={14}
+            color="#1E88E5"
+          />
+          <Text className="text-xs font-semibold text-blue-600">
+            {attachments.length} Attachment
+            {attachments.length > 1 ? "s" : ""}
+          </Text>
+        </View>
+        <Ionicons
+          name={isExpanded ? "chevron-up" : "chevron-down"}
+          size={14}
+          color="#6B7280"
+        />
+      </TouchableOpacity>
+
+      {isExpanded && (
+        <FlatList
+          data={attachments}
+          keyExtractor={(item, index) =>
+            item._id || `${item.fileName}-${index}`
+          }
+          scrollEnabled={false}
+          renderItem={({ item }) => (
+            <TouchableOpacity
+              onPress={() => openFile(item.fileUrl)}
+              className="flex-row items-center justify-between bg-white border border-slate-100 rounded-lg p-2.5 mb-1.5 ml-2"
+            >
+              <View className="flex-row items-center flex-1">
+                <Ionicons
+                  name={getIcon(item.fileType)}
+                  size={16}
+                  color="#1E88E5"
+                />
+
+                <Text
+                  numberOfLines={1}
+                  className="ml-2 flex-1 text-slate-600 text-xs"
+                >
+                  {item.fileName}
+                </Text>
+              </View>
+
+              <Ionicons
+                name="open-outline"
+                size={14}
+                color="#6B7280"
+              />
+            </TouchableOpacity>
+          )}
+        />
+      )}
+    </View>
+  );
+};
+
+export default AttachmentViewer;

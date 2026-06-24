@@ -3,7 +3,7 @@ import express from "express";
 import { isAuthenticated } from "../middleware/TokenVerify.js";
 import { authorizeRoles } from "../middleware/role.middleware.js";
 import { upload } from "../middleware/multer.js";
-import { changeParentStatus, getAllParents, getParentById, updateParent } from "../controllers/parent.controller.js";
+import { changeParentStatus, getAllParents, getParentById, getParentByUserId, updateParent } from "../controllers/parent.controller.js";
 
 
 const router = express.Router();
@@ -17,9 +17,16 @@ router.get(
 router.get(
     "/:id",
     isAuthenticated,
-    authorizeRoles("admin", "management"),
+    authorizeRoles("parent", "admin", "management"),
     getParentById
 );
+
+router.get(
+    "/user/:userId",
+    isAuthenticated,
+    authorizeRoles("parent", "admin", "management"),
+    getParentByUserId
+)
 
 router.put(
     "/:id",

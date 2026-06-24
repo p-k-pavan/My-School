@@ -65,7 +65,7 @@ export const createHomework = asyncHandler(async (req, res) => {
 
     const attachments = req.files?.map((file) => ({
         fileName: file.originalname,
-        fileUrl: file.path,
+        fileUrl: file.path.replace(/\\/g, "/"),
         fileType: getFileType(file.mimetype),
     })) || [];
 
@@ -162,18 +162,24 @@ export const updateHomework = asyncHandler(async (req, res) => {
         );
     }
 
-    const attachments = req.files?.length
-        ? req.files.map((file) => ({
-            fileName: file.originalname,
-            fileUrl: file.path,
-            fileType: getFileType(file.mimetype),
-        }))
-        : homework.attachments;
+    const existingAttachments = req.body.existingAttachments
+        ? JSON.parse(req.body.existingAttachments)
+        : [];
+
+    const newAttachments = (req.files || []).map((file) => ({
+        fileName: file.originalname,
+        fileUrl: file.path,
+        fileType: getFileType(file.mimetype),
+    }));
+
+    homework.attachments = [
+        ...existingAttachments,
+        ...newAttachments,
+    ];
 
     homework.title = title;
     homework.description = description;
     homework.dueDate = due;
-    homework.attachments = attachments;
 
     await homework.save();
 
