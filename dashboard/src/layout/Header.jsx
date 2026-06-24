@@ -14,11 +14,14 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { menus } from "@/constants/menu";
 import { useTheme } from "next-themes";
+import { logout } from "@/redux/reducer/authReducer";
+import { useLogoutMutation } from "@/redux/api/auth";
 
 const Header = ({ onToggleSidebar }) => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const { user } = useSelector((state) => state.auth);
+    const [logoutMutation] = useLogoutMutation();
     const [menuOpen, setMenuOpen] = useState(false);
     const [activeMenu, setActiveMenu] = useState(null);
     const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -36,9 +39,15 @@ const Header = ({ onToggleSidebar }) => {
 
     const role = user?.role;
 
-    const handleLogout = () => {
-
-        navigate("/");
+    const handleLogout = async () => {
+        try {
+            await logoutMutation().unwrap();
+        } catch (err) {
+            console.error("Backend logout failed:", err);
+        } finally {
+            dispatch(logout());
+            navigate("/");
+        }
     };
 
     const handleProfile = () => {

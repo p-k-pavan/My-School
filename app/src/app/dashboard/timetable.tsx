@@ -3,9 +3,10 @@ import { ScrollView, StatusBar, View, Text, TouchableOpacity, ActivityIndicator 
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAppSelector } from "@/redux/hooks";
 import { useGetParentsByUserIdQuery } from "@/redux/api/parent";
-import { useGetTimetableByClassQuery } from "@/redux/api/timetable";
+import { useGetTimetableByClassQuery, useGetTimetableByTeacherQuery } from "@/redux/api/timetable";
+import { useGetTeacherByUserIdQuery } from "@/redux/api/teacher";
 import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
+import { router, Redirect } from "expo-router";
 
 const DAYS_OF_WEEK = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
@@ -73,38 +74,84 @@ const getTimelineColors = (status: string) => {
 
 export default function TimetableDetail() {
   const user = useAppSelector((state) => state.auth.user);
+
+  if (!user) {
+    return <Redirect href="/" />;
+  }
+
   const isParent = (user as any)?.role === "parent";
+  const isTeacher = (user as any)?.role === "teacher";
+  
   const parentId = isParent ? String((user as any).id) : undefined;
   const { data: parentData, isLoading: isParentLoading } = useGetParentsByUserIdQuery(
     parentId as string | undefined,
     { skip: !isParent || !parentId }
   );
 
-  const selectedStudentId = useAppSelector((state) => state.auth.selectedStudentId);
-  const studentIds = parentData?.parent?.studentIds || [];
-  const student = studentIds.find((s: any) => s._id === selectedStudentId) || studentIds[0];
+  const student = parentData?.parent?.studentIds?.[0];
   const classId = student?.classId?._id;
   const academicYear = "2026-2027";
 
   const { data: ttData, isLoading: isTimetableLoading } = useGetTimetableByClassQuery(
     { classId, academicYear },
-    { skip: !classId }
+    { skip: !classId || isTeacher }
+  );
+
+  const { data: teacherTtData, isLoading: isTeacherTimetableLoading } = useGetTimetableByTeacherQuery(
+    { academicYear },
+    { skip: !isTeacher }
+  );
+
+  const { data: teacherData } = useGetTeacherByUserIdQuery(
+    (user as any)?.id as string | undefined,
+    { skip: !isTeacher || !(user as any)?.id }
   );
 
   const timetable = ttData?.timetable;
-  const isLoading = isParentLoading || isTimetableLoading;
+  const isLoading = isParentLoading || isTimetableLoading || isTeacherTimetableLoading;
 
-  const currentDayIndex = new Date().getDay(); // 0 is Sunday, 1 is Monday...
+  const currentDayIndex = new Date().getDay();
   const todayName = currentDayIndex === 0 ? "Monday" : DAYS_OF_WEEK[currentDayIndex - 1];
 
   const [selectedDay, setSelectedDay] = useState(todayName);
 
-  const activeDayData = Array.isArray(timetable)
-    ? timetable.find((t) => t.day.toLowerCase() === selectedDay.toLowerCase())
-    : null;
+  let sortedPeriods: any[] = [];
+  if (isTeacher) {
+    const activeDayEntries = Array.isArray(teacherTtData?.timetable)
+      ? teacherTtData.timetable.filter((t: any) => t.day.toLowerCase() === selectedDay.toLowerCase())
+      : [];
+    
+    const teacherPeriods: any[] = [];
+    activeDayEntries.forEach((entry: any) => {
+      const classNameInfo = entry.classId
+        ? `Class ${entry.classId.className}${entry.classId.section || ""}`
+        : "N/A";
+      
+      if (Array.isArray(entry.periods)) {
+        entry.periods.forEach((period: any) => {
+          teacherPeriods.push({
+            ...period,
+            classNameInfo,
+          });
+        });
+      }
+    });
+    sortedPeriods = teacherPeriods.sort((a, b) => a.periodNo - b.periodNo);
+  } else {
+    const activeDayData = Array.isArray(timetable)
+      ? timetable.find((t) => t.day.toLowerCase() === selectedDay.toLowerCase())
+      : null;
+    const periods = activeDayData?.periods || [];
+    sortedPeriods = [...periods].sort((a, b) => a.periodNo - b.periodNo);
+  }
 
-  const periods = activeDayData?.periods || [];
-  const sortedPeriods = [...periods].sort((a, b) => a.periodNo - b.periodNo);
+  const displayName = isTeacher
+    ? (teacherData?.teacher?.teacherName || (user as any)?.name || "Teacher")
+    : (student?.studentName || "John Doe");
+
+  const displayClassInfo = isTeacher
+    ? `Teacher • EMP: ${teacherData?.teacher?.employeeId || "N/A"}`
+    : (student ? `Class ${student.classId.className}${student.classId.section || ""}` : "");
 
   return (
     <SafeAreaView className="flex-1 bg-slate-100" edges={["top", "left", "right"]}>
@@ -116,11 +163,9 @@ export default function TimetableDetail() {
         </TouchableOpacity>
         <View className="flex-1">
           <Text className="text-lg font-bold text-slate-800">Class Timetable</Text>
-          {student && (
-            <Text className="text-xs text-slate-500">
-              {student.studentName} • Class {student.classId.className}{student.classId.section || ""}
-            </Text>
-          )}
+          <Text className="text-xs text-slate-500">
+            {displayName} • {displayClassInfo}
+          </Text>
         </View>
       </View>
 
@@ -173,6 +218,9 @@ export default function TimetableDetail() {
               isToday
             );
             const colors = getTimelineColors(status);
+            const detailsSubText = isTeacher
+              ? `${item.classNameInfo} • Period ${item.periodNo}`
+              : `${item.teacherId?.teacherName || "Teacher"} • Period ${item.periodNo}`;
 
             return (
               <View
@@ -202,7 +250,7 @@ export default function TimetableDetail() {
                     {item.subjectId?.subjectName || "Subject"}
                   </Text>
                   <Text className="text-[12px] text-slate-400 mt-0.5">
-                    {item.teacherId?.teacherName || "Teacher"} • Period {item.periodNo}
+                    {detailsSubText}
                   </Text>
                   <View
                     className={`self-start mt-1.5 px-2.5 py-0.5 rounded-full ${statusColor}`}

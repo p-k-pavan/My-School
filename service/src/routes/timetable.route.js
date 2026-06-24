@@ -6,6 +6,7 @@ import {
     getTimetableByClass,
     updateTimetable,
     deleteTimetable,
+    getTimetableByTeacher,
 } from "../controllers/timetable.controller.js";
 
 const router = express.Router();
@@ -17,6 +18,12 @@ router.post(
     authorizeRoles("admin", "management"),
     createTimetable
 );
+
+router.get(
+    "/teacher",
+    authorizeRoles("teacher", "admin", "management"),
+    getTimetableByTeacher
+)
 
 router.get(
     "/class/:classId",

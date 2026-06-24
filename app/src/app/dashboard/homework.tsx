@@ -3,9 +3,10 @@ import { ScrollView, StatusBar, View, Text, TouchableOpacity, ActivityIndicator 
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAppSelector } from "@/redux/hooks";
 import { useGetParentsByUserIdQuery } from "@/redux/api/parent";
-import { useGetHomeworkByClassQuery } from "@/redux/api/homework";
+import { useGetHomeworkByClassQuery, useGetHomeworkByTeacherQuery } from "@/redux/api/homework";
+import { useGetTeacherByUserIdQuery } from "@/redux/api/teacher";
 import { Ionicons, FontAwesome6 } from "@expo/vector-icons";
-import { router } from "expo-router";
+import { router, Redirect } from "expo-router";
 import AttachmentViewer from "@/components/shared/AttachmentViewer";
 
 const SUBJECT_STYLING: Record<string, { bg: string; color: string; icon: string }> = {
@@ -25,6 +26,7 @@ const getSubjectStyle = (subjectName: string = "") => {
 };
 
 const formatDate = (dateStr: string) => {
+  if (!dateStr) return "";
   try {
     const d = new Date(dateStr);
     if (isNaN(d.getTime())) return dateStr;
@@ -67,33 +69,58 @@ const formatHeaderDate = (dateStr: string) => {
 
 export default function AllHomework() {
   const user = useAppSelector((state) => state.auth.user);
+
+  if (!user) {
+    return <Redirect href="/" />;
+  }
+
   const isParent = (user as any)?.role === "parent";
+  const isTeacher = (user as any)?.role === "teacher";
+  
   const parentId = isParent ? String((user as any).id) : undefined;
   const { data: parentData, isLoading: isParentLoading } = useGetParentsByUserIdQuery(
     parentId as string | undefined,
     { skip: !isParent || !parentId }
   );
 
-  const selectedStudentId = useAppSelector((state) => state.auth.selectedStudentId);
-  const studentIds = parentData?.parent?.studentIds || [];
-  const student = studentIds.find((s: any) => s._id === selectedStudentId) || studentIds[0];
+  const student = parentData?.parent?.studentIds?.[0];
   const classId = student?.classId?._id;
 
   const [assignedDate, setAssignedDate] = useState(() => new Date().toISOString().split("T")[0]);
 
   const { data: hwData, isLoading: isHomeworkLoading } = useGetHomeworkByClassQuery(
     { classId, assigned: assignedDate },
-    { skip: !classId }
+    { skip: !classId || isTeacher }
   );
 
-  const homework = hwData?.homework;
-  const isLoading = isParentLoading || isHomeworkLoading;
+  const { data: teacherHwData, isLoading: isTeacherHomeworkLoading } = useGetHomeworkByTeacherQuery(
+    { assigned: assignedDate },
+    { skip: !isTeacher }
+  );
+
+  const { data: teacherData } = useGetTeacherByUserIdQuery(
+    (user as any)?.id as string | undefined,
+    { skip: !isTeacher || !(user as any)?.id }
+  );
+
+  const homework = isTeacher ? teacherHwData?.homework : hwData?.homework;
+  const isLoading = isTeacher
+    ? (isTeacherHomeworkLoading)
+    : (isParentLoading || isHomeworkLoading);
 
   const changeDate = (days: number) => {
     const d = new Date(assignedDate);
     d.setDate(d.getDate() + days);
     setAssignedDate(d.toISOString().split("T")[0]);
   };
+
+  const displayName = isTeacher
+    ? (teacherData?.teacher?.teacherName || (user as any)?.name || "Teacher")
+    : (student?.studentName || "John Doe");
+
+  const displayClassInfo = isTeacher
+    ? "Teacher Profile"
+    : (student ? `Class ${student.classId.className}${student.classId.section || ""}` : "");
 
   return (
     <SafeAreaView className="flex-1 bg-slate-100" edges={["top", "left", "right"]}>
@@ -105,11 +132,9 @@ export default function AllHomework() {
         </TouchableOpacity>
         <View className="flex-1">
           <Text className="text-lg font-bold text-slate-800">Homework Details</Text>
-          {student && (
-            <Text className="text-xs text-slate-500">
-              {student.studentName} • Class {student.classId.className}{student.classId.section || ""}
-            </Text>
-          )}
+          <Text className="text-xs text-slate-500">
+            {displayName} • {displayClassInfo}
+          </Text>
         </View>
       </View>
 
@@ -149,9 +174,15 @@ export default function AllHomework() {
         </View>
       ) : (
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 12 }}>
-          {homework.map((item:any) => {
+          {homework.map((item: any) => {
             const subjectName = item.subjectId?.subjectName || "Subject";
             const style = getSubjectStyle(subjectName);
+            const className = item.classId
+              ? `Class ${item.classId.className}${item.classId.section || ""}`
+              : "N/A";
+
+            const footerText = isTeacher ? className : (item.teacherId?.teacherName || "Teacher");
+            const footerIcon = isTeacher ? "school-outline" : "person-outline";
 
             return (
               <View
@@ -198,9 +229,9 @@ export default function AllHomework() {
 
                 <View className="flex-row justify-between items-center pt-3 border-t border-slate-50">
                   <View className="flex-row items-center gap-1.5">
-                    <Ionicons name="person-outline" size={13} color="#94a3b8" />
+                    <Ionicons name={footerIcon as any} size={13} color="#94a3b8" />
                     <Text className="text-[11px] text-slate-400">
-                      {item.teacherId?.teacherName || "Teacher"}
+                      {footerText}
                     </Text>
                   </View>
                 </View>

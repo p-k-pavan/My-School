@@ -270,3 +270,53 @@ export const getSubjectsByClass = asyncHandler(async (req, res) => {
     });
 
 });
+
+export const getTimetableByTeacher = asyncHandler(async (req, res) => {
+    const { academicYear, day } = req.query;
+
+    if (!mongoose.Types.ObjectId.isValid(req.user.id)) {
+        throw new AppError("Invalid User Id", 400);
+    }
+
+    const teacher = await Teacher.findOne({
+        userId: req.user.id,
+    });
+
+    if (!teacher) {
+        throw new AppError("Teacher not found", 404);
+    }
+
+    if (!academicYear) {
+        throw new AppError("Academic year query parameter is required", 400);
+    }
+
+    const query = {
+        "periods.teacherId": teacher._id,
+        academicYear,
+    };
+
+    if (day) {
+        const validDays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+        if (!validDays.includes(day)) {
+            throw new AppError("Invalid day filter value", 400);
+        }
+        query.day = day;
+    }
+
+    const timetable = await Timetable.find(query)
+        .populate("periods.subjectId", "subjectName subjectCode")
+        .populate("classId", "className section")
+        .sort({
+            day: 1,
+        });
+
+    const dayOrder = { Monday: 1, Tuesday: 2, Wednesday: 3, Thursday: 4, Friday: 5, Saturday: 6 };
+    timetable.sort((a, b) => (dayOrder[a.day] || 99) - (dayOrder[b.day] || 99));
+
+    res.status(200).json({
+        success: true,
+        message: "Timetable fetched successfully",
+        count: timetable.length,
+        timetable,
+    });
+});

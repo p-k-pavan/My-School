@@ -33,9 +33,20 @@ export const homeworkApi = createApi({
             }),
             providesTags: ["Homework"],
         }),
+
+        getHomeworkByTeacher: builder.query({
+            query: ({assigned }) => ({
+                url: `/homework/teacher`,
+                params: {
+                    assignedDate: assigned,
+                },
+            }),
+            providesTags: ["Homework"],
+        }),
     }),
 });
 
 export const {
-    useGetHomeworkByClassQuery
+    useGetHomeworkByClassQuery,
+    useGetHomeworkByTeacherQuery
 } = homeworkApi;

@@ -31,9 +31,18 @@ export const timetableApi = createApi({
             }),
             providesTags: ["Timetables"],
         }),
+
+        getTimetableByTeacher: builder.query({
+            query: ({...params }) => ({
+                url: `/timetable/teacher`,
+                params,
+            }),
+            providesTags: ["Timetables"],
+        }),
     }),
 });
 
 export const {
-    useGetTimetableByClassQuery
+    useGetTimetableByClassQuery,
+    useGetTimetableByTeacherQuery
 } = timetableApi;
