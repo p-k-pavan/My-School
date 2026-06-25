@@ -142,7 +142,7 @@ export const getParentByUserId = asyncHandler(async (req, res) => {
     const parent = await Parent.findOne({userId})
         .populate({
             path: "studentIds",
-            select: "studentName admissionNo rollNo classId",
+            select: "studentName admissionNo rollNo classId profilePhoto gender",
             populate: {
                 path: "classId",
                 select: "className section",

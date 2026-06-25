@@ -16,6 +16,7 @@ export const createTeacher = asyncHandler(async (req, res) => {
         qualification,
         joiningDate,
         assignedClasses,
+        gender
     } = req.body;
 
     if (
@@ -24,7 +25,8 @@ export const createTeacher = asyncHandler(async (req, res) => {
         !mobile ||
         !email ||
         !qualification ||
-        !joiningDate
+        !joiningDate ||
+        !gender
     ) {
         throw new AppError(
             "All fields are required",
@@ -77,6 +79,7 @@ export const createTeacher = asyncHandler(async (req, res) => {
             role: "teacher",
             password,
             isPasswordChanged: false,
+            gender
         });
 
         const newTeacher =
@@ -144,6 +147,7 @@ export const bulkUploadTeacher = asyncHandler(async (req, res) => {
                     qualification,
                     joiningDate,
                     assignedClasses,
+                    gender
                 } = row;
 
                 if (
@@ -225,6 +229,7 @@ export const bulkUploadTeacher = asyncHandler(async (req, res) => {
                         joiningDate,
                         assignedClasses:
                             assignedClasses || [],
+                        gender
                     });
 
                 createdTeachers.push(
@@ -337,6 +342,7 @@ export const updateTeacher = asyncHandler(
             email,
             qualification,
             joiningDate,
+            gender
         } = req.body;
 
         const teacher = await Teacher.findById(id);
@@ -373,6 +379,8 @@ export const updateTeacher = asyncHandler(
         teacher.qualification = qualification || teacher.qualification;
 
         teacher.joiningDate = joiningDate || teacher.joiningDate;
+
+        teacher.gender = gender || teacher.gender;
 
         await teacher.save();
 

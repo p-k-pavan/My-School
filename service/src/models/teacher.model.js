@@ -48,6 +48,12 @@ const teacherSchema = new mongoose.Schema(
       default: "",
     },
 
+    gender: {
+      type: String,
+      enum: ["Male", "Female", "Other"],
+      required: true,
+    },
+
     assignedClasses: [
       {
         type: mongoose.Schema.Types.ObjectId,
