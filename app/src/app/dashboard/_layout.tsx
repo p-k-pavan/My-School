@@ -1,6 +1,6 @@
 
-import Footer from '@/components/Footer';
-import Drawer from '@/components/Drawer';
+import Footer from '@/components/shared/Footer';
+import Drawer from '@/components/shared/Drawer';
 import { DrawerProvider } from '@/context/DrawerContext';
 import { Slot } from 'expo-router';
 import { View } from 'react-native';
