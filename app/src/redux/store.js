@@ -7,12 +7,13 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import authReducer from "./reducer/authReducer";
 import { authApi } from "./api/auth";
-import {parentApi} from "./api/parent";
-import {timetableApi} from "./api/timetable";
-import {homeworkApi} from "./api/homework";
-import {studentApi} from "./api/student";
-import {teacherApi} from "./api/teacher";
-import {feesApi} from "./api/fees"
+import { parentApi } from "./api/parent";
+import { timetableApi } from "./api/timetable";
+import { homeworkApi } from "./api/homework";
+import { studentApi } from "./api/student";
+import { teacherApi } from "./api/teacher";
+import { feesApi } from "./api/fees";
+import { attendanceApi } from "./api/attendance";
 
 const persistConfig = {
   key: "root",
@@ -28,7 +29,8 @@ const rootReducer = combineReducers({
   [homeworkApi.reducerPath]: homeworkApi.reducer,
   [studentApi.reducerPath]: studentApi.reducer,
   [teacherApi.reducerPath]: teacherApi.reducer,
-  [feesApi.reducerPath]: feesApi.reducer
+  [feesApi.reducerPath]: feesApi.reducer,
+  [attendanceApi.reducerPath]: attendanceApi.reducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
@@ -48,12 +50,13 @@ export const store = configureStore({
         ],
       },
     }).concat(authApi.middleware)
-    .concat(parentApi.middleware)
-    .concat(timetableApi.middleware)
-    .concat(homeworkApi.middleware)
-    .concat(studentApi.middleware)
-    .concat(teacherApi.middleware)
-    .concat(feesApi.middleware)
+      .concat(parentApi.middleware)
+      .concat(timetableApi.middleware)
+      .concat(homeworkApi.middleware)
+      .concat(studentApi.middleware)
+      .concat(teacherApi.middleware)
+      .concat(feesApi.middleware)
+      .concat(attendanceApi.middleware)
 
 });
 

@@ -97,7 +97,7 @@ export const markAttendance = asyncHandler(async (req, res) => {
 
 export const getAttendanceByStudent = asyncHandler(async (req, res) => {
     const { studentId } = req.params;
-    const { startDate, endDate, page = 1, limit = 30 } = req.query;
+    const { startDate, endDate, page = 1, limit = 31 } = req.query;
 
     if (!mongoose.Types.ObjectId.isValid(studentId)) {
         throw new AppError("Invalid student ID", 400);
@@ -140,44 +140,13 @@ export const getAttendanceByStudent = asyncHandler(async (req, res) => {
                     { $skip: (Number(page) - 1) * Number(limit) },
                     { $limit: Number(limit) },
                     {
-                        $lookup: {
-                            from: "classes",
-                            localField: "classId",
-                            foreignField: "_id",
-                            as: "classInfo",
-                        },
-                    },
-                    {
-                        $lookup: {
-                            from: "teachers",
-                            localField: "markedBy",
-                            foreignField: "_id",
-                            as: "teacherInfo",
-                        },
-                    },
-                    {
                         $project: {
                             _id: 1,
                             attendanceDate: 1,
                             status: "$attendance.status",
-                            remarks: "$attendance.remarks",
-                            class: { $arrayElemAt: ["$classInfo", 0] },
-                            markedByTeacher: { $arrayElemAt: ["$teacherInfo", 0] },
+                            remarks: "$attendance.remarks"
                         },
-                    },
-                    {
-                        $project: {
-                            _id: 1,
-                            attendanceDate: 1,
-                            status: 1,
-                            remarks: 1,
-                            "class._id": 1,
-                            "class.className": 1,
-                            "class.section": 1,
-                            "markedByTeacher._id": 1,
-                            "markedByTeacher.teacherName": 1,
-                        },
-                    },
+                    }
                 ],
             },
         },

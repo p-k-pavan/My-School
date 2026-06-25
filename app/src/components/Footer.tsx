@@ -49,7 +49,9 @@ export default function Footer() {
   ];
 
   const activeTab = tabs.reduce((bestTab, currentTab) => {
-    const isMatch = pathname === currentTab.route || pathname.startsWith(currentTab.route + "/");
+    const isMatch = currentTab.route === "/dashboard"
+      ? pathname === "/dashboard" || pathname === "/dashboard/"
+      : pathname === currentTab.route || pathname.startsWith(currentTab.route + "/");
     if (!isMatch) return bestTab;
     if (!bestTab) return currentTab;
     return currentTab.route.length > bestTab.route.length ? currentTab : bestTab;
