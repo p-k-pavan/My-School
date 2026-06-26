@@ -1,5 +1,4 @@
 import { NewspaperIcon, TimelineIcon } from "lucide-react";
-import path from "node:path";
 import {
   LuBadge,
   LuBriefcase,
@@ -14,7 +13,8 @@ import {
   LuUserCheck,
   LuGalleryThumbnails,
   LuCalendar,
-  LuBook
+  LuBook,
+  LuMegaphone
 } from "react-icons/lu";
 
 export const menus = [
@@ -114,6 +114,12 @@ export const menus = [
     path: "/gallery",
     icon: LuGalleryThumbnails,
     roles: ["management", "admin"],
+  },
+  {
+    name: "School Feed",
+    path: "/feed",
+    icon: LuMegaphone,
+    roles: ["management", "admin", "teacher", "parent"],
   },
 
 ];

@@ -22,6 +22,7 @@ import { homeworkApi } from "./api/homework";
 import { feeStructureApi } from "./api/feeStructure";
 import { feeApi } from "./api/fee";
 import { paymentApi } from "./api/payment";
+import { feedApi } from "./api/feed";
 
 
 const persistConfig = {
@@ -45,6 +46,7 @@ const rootReducer = combineReducers({
   [feeStructureApi.reducerPath]: feeStructureApi.reducer,
   [feeApi.reducerPath]: feeApi.reducer,
   [paymentApi.reducerPath]: paymentApi.reducer,
+  [feedApi.reducerPath]: feedApi.reducer,
 });
 
 const persistedReducer = persistReducer( persistConfig,rootReducer );
@@ -77,6 +79,7 @@ export const store =
       .concat(feeStructureApi.middleware)
       .concat(feeApi.middleware)
       .concat(paymentApi.middleware)
+      .concat(feedApi.middleware)
   });
 
 export const persistor = persistStore(store);

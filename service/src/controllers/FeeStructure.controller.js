@@ -2,7 +2,7 @@
 
 import mongoose from "mongoose";
 import asyncHandler from "../middleware/asyncHandler.js";
-import { Fee } from "../models/Fee.js";
+import { Fee } from "../models/Fee.model.js";
 import { FeeStructure } from "../models/FeeStructure.js";
 import AppError from "../utils/AppError.js";
 

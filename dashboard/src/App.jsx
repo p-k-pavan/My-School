@@ -15,6 +15,7 @@ import Subjects from './pages/Subjects'
 import Timetable from './pages/Timetable'
 import Homework from './pages/Homework'
 import Fees from './pages/Fees'
+import Feed from './pages/Feed'
 
 function App() {
   return (
@@ -39,6 +40,7 @@ function App() {
             <Route path="/timetable" element={<Timetable />} />
             <Route path="/homework" element={<Homework />} />
             <Route path="/fees" element={<Fees />} />
+            <Route path="/feed" element={<Feed />} />
           </Route>
 
         </Routes>

@@ -18,7 +18,7 @@ router.use(isAuthenticated);
 
 router.post(
     "/",
-    authorizeRoles("admin", "management", "teacher"),
+    authorizeRoles("admin", "management"),
     upload.array("attachments", 5),
     createFeedPost
 );
@@ -35,26 +35,26 @@ router.get(
 
 router.put(
     "/:feedId",
-    authorizeRoles("admin", "management", "teacher"),
+    authorizeRoles("admin", "management"),
     upload.array("attachments", 5),
     updateFeedPost
 );
 
 router.delete(
     "/:feedId",
-    authorizeRoles("admin", "management", "teacher"),
+    authorizeRoles("admin", "management"),
     deleteFeedPost
 );
 
 router.put(
     "/:feedId/pin",
-    authorizeRoles("admin", "management", "teacher"),
+    authorizeRoles("admin", "management"),
     pinFeedPost
 );
 
 router.put(
     "/:feedId/unpin",
-    authorizeRoles("admin", "management", "teacher"),
+    authorizeRoles("admin", "management"),
     unpinFeedPost
 );
 
