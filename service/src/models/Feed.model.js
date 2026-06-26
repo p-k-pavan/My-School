@@ -16,43 +16,18 @@ const feedPostSchema = new mongoose.Schema(
             trim: true,
         },
 
-        images: {
-            type: [
-                {
-                    fileName: String,
-                    fileUrl: String,
-                },
-            ],
-            validate: {
-                validator: (v) => v.length <= 10,
-                message: "A post can have at most 10 images",
-            },
-        },
-
-        videos: {
-            type: [
-                {
-                    fileName: String,
-                    fileUrl: String,
-                },
-            ],
-            validate: {
-                validator: (v) => v.length <= 3,
-                message: "A post can have at most 3 videos",
-            },
-        },
-
         attachments: {
-            type: [
-                {
-                    fileName: String,
-                    fileUrl: String,
-                    fileType: {
-                        type: String,
-                        enum: ["pdf", "doc", "docx", "xlsx", "ppt", "other"],
-                    },
+            type: [{
+                fileName: String,
+                fileUrl: String,
+                fileType: {
+                    type: String,
+                    enum: ["image", "video", "pdf", "doc", "docx", "xlsx", "ppt", "other"],
                 },
-            ],
+                fileSize: Number,
+                mimeType: String,
+            }],
+            default: [],
             validate: {
                 validator: (v) => v.length <= 5,
                 message: "A post can have at most 5 attachments",
@@ -60,16 +35,6 @@ const feedPostSchema = new mongoose.Schema(
         },
 
         viewCount: {
-            type: Number,
-            default: 0,
-        },
-
-        commentCount: {
-            type: Number,
-            default: 0,
-        },
-
-        reactionCount: {
             type: Number,
             default: 0,
         },
@@ -83,7 +48,7 @@ const feedPostSchema = new mongoose.Schema(
 
         visibility: {
             type: String,
-            enum: ["all", "teachers", "students", "classes", "individual_students"],
+            enum: ["all", "teachers", "classes", "individual_students"],
             default: "all",
         },
 
@@ -122,27 +87,19 @@ const feedPostSchema = new mongoose.Schema(
     }
 );
 
-feedPostSchema.pre("save", function (next) {
-    if (this.visibility === "classes" && this.targetClasses.length === 0) {
-        return next(
-            new Error("targetClasses must be non-empty when visibility is 'classes'")
-        );
+feedPostSchema.pre("save", function () {
+    if (this.visibility === "classes" && (!this.targetClasses || this.targetClasses.length === 0)) {
+        throw new Error("targetClasses must be non-empty when visibility is 'classes'");
     }
     if (
         this.visibility === "individual_students" &&
-        this.targetStudents.length === 0
+        (!this.targetStudents || this.targetStudents.length === 0)
     ) {
-        return next(
-            new Error(
-                "targetStudents must be non-empty when visibility is 'individual_students'"
-            )
-        );
+        throw new Error("targetStudents must be non-empty when visibility is 'individual_students'");
     }
-    next();
 });
 
 feedPostSchema.index({
-    schoolId: 1,
     status: 1,
     visibility: 1,
     isPinned: -1,
