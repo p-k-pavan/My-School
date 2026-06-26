@@ -26,12 +26,29 @@ const AttachmentViewer: React.FC<AttachmentViewerProps> = ({
   attachments,
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
-  const openFile = async (filePath: string) => {
+  const [viewerVisible, setViewerVisible] = useState(false);
+  const [selectedDoc, setSelectedDoc] = useState<{ fileName: string; fileUrl: string } | null>(null);
+
+  const openFile = async (filePath: string, fileName: string) => {
     try {
+      const fileExtension = filePath.split(".").pop()?.toLowerCase() || "";
+      const isDoc = ["pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx", "txt"].includes(fileExtension);
+      
+      if (isDoc) {
+        setSelectedDoc({ fileName, fileUrl: filePath });
+        setViewerVisible(true);
+        return;
+      }
+
       const baseUrl = process.env.EXPO_PUBLIC_API_BASE_FILEURL || 
                       process.env.EXPO_PUBLIC_API_BASE_URL?.replace("/api", "") || 
                       "http://192.168.31.144:5000";
       const url = `${baseUrl}/${filePath}`;
+      
+      let fileUrlToOpen = url;
+      if (fileExtension && ["pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx"].includes(fileExtension)) {
+        fileUrlToOpen = `https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(url)}`;
+      }
       
       if (Platform.OS === "web") {
         if (typeof window !== "undefined") {
@@ -41,9 +58,9 @@ const AttachmentViewer: React.FC<AttachmentViewerProps> = ({
         }
       } else {
         try {
-          await WebBrowser.openBrowserAsync(url);
+          await WebBrowser.openBrowserAsync(fileUrlToOpen);
         } catch {
-          await Linking.openURL(url);
+          await Linking.openURL(fileUrlToOpen);
         }
       }
     } catch {
@@ -97,7 +114,7 @@ const AttachmentViewer: React.FC<AttachmentViewerProps> = ({
           scrollEnabled={false}
           renderItem={({ item }) => (
             <TouchableOpacity
-              onPress={() => openFile(item.fileUrl)}
+              onPress={() => openFile(item.fileUrl, item.fileName)}
               className="flex-row items-center justify-between bg-white border border-slate-100 rounded-lg p-2.5 mb-1.5 ml-2"
             >
               <View className="flex-row items-center flex-1">
