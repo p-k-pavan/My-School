@@ -16,7 +16,7 @@ import { useAppSelector } from "@/redux/hooks";
 import { useGetAllFeedPostQuery, useGetFeedPostByIdQuery } from "@/redux/api/feed";
 import { Ionicons } from "@expo/vector-icons";
 import { Redirect } from "expo-router";
-import FeedMediaCarousel from "@/components/shared/FeedMediaCarousel";
+import FeedMedia from "@/components/feed/FeedMedia";
 
 const { width } = Dimensions.get("window");
 
@@ -201,7 +201,7 @@ export default function Feed() {
                   </Text>
                 </View>
 
-                <FeedMediaCarousel
+                <FeedMedia
                   attachments={feed.attachments}
                   isActive={activePostId === feed._id}
                 />
