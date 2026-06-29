@@ -4,8 +4,9 @@ import { useGetTeacherByUserIdQuery } from "@/redux/api/teacher";
 import { AntDesign, Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { useAppDispatch } from "@/redux/hooks";
 import { logout } from "@/redux/reducer/authReducer";
-import { useLogoutMutation } from "@/redux/api/auth";
+import { useLogoutMutation, useDeactivateDeviceTokenMutation } from "@/redux/api/auth";
 import { router } from "expo-router";
+import { getOrCreateDeviceId, clearSyncedTokenInfo } from "@/services/PushNotifications";
 
 interface TeacherProfileProps {
   userId: string;
@@ -28,6 +29,7 @@ const formatDate = (dateStr?: string) => {
 export default function TeacherProfile({ userId }: TeacherProfileProps) {
   const dispatch = useAppDispatch();
   const [logoutMutation] = useLogoutMutation();
+  const [deactivateDeviceToken] = useDeactivateDeviceTokenMutation();
 
   const handleLogout = () => {
     Alert.alert(
@@ -40,10 +42,18 @@ export default function TeacherProfile({ userId }: TeacherProfileProps) {
           style: "destructive",
           onPress: async () => {
             try {
+              const deviceId = await getOrCreateDeviceId();
+              await deactivateDeviceToken({ deviceId }).unwrap();
+            } catch (err) {
+              console.log("Deactivate token failed:", err);
+            }
+
+            try {
               await logoutMutation(undefined).unwrap();
             } catch (err) {
               console.log("Backend logout failed:", err);
             } finally {
+              await clearSyncedTokenInfo();
               dispatch(logout());
               router.replace("/");
             }

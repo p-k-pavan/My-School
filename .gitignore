@@ -4,6 +4,7 @@
 app/node_modules/
 service/node_modules/
 service/uploads/
+app/android
 
 # Expo
 app/.expo/

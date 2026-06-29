@@ -38,10 +38,28 @@ export const authApi = createApi({
                 method: "POST",
             }),
         }),
+
+        registerDeviceToken: builder.mutation({
+            query: (data) => ({
+                url: "/auth/device-token",
+                method: "POST",
+                body: data,
+            }),
+        }),
+
+        deactivateDeviceToken: builder.mutation({
+            query: (data) => ({
+                url: "/auth/device-token/deactivate",
+                method: "POST",
+                body: data,
+            }),
+        }),
     }),
 });
 
 export const {
     useLoginMutation,
-    useLogoutMutation
+    useLogoutMutation,
+    useRegisterDeviceTokenMutation,
+    useDeactivateDeviceTokenMutation
 } = authApi;

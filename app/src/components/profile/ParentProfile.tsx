@@ -6,7 +6,8 @@ import { useAppSelector, useAppDispatch } from "@/redux/hooks";
 import { setSelectedStudentId, logout } from "@/redux/reducer/authReducer";
 import { AntDesign, Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { useLogoutMutation } from "@/redux/api/auth";
+import { useLogoutMutation, useDeactivateDeviceTokenMutation } from "@/redux/api/auth";
+import { getOrCreateDeviceId, clearSyncedTokenInfo } from "@/services/PushNotifications";
 
 interface ParentProfileProps {
   userId: string;
@@ -30,6 +31,7 @@ export default function ParentProfile({ userId }: ParentProfileProps) {
   const dispatch = useAppDispatch();
   const selectedStudentId = useAppSelector((state) => state.auth.selectedStudentId);
   const [logoutMutation] = useLogoutMutation();
+  const [deactivateDeviceToken] = useDeactivateDeviceTokenMutation();
 
   const handleLogout = () => {
     Alert.alert(
@@ -42,10 +44,18 @@ export default function ParentProfile({ userId }: ParentProfileProps) {
           style: "destructive",
           onPress: async () => {
             try {
+              const deviceId = await getOrCreateDeviceId();
+              await deactivateDeviceToken({ deviceId }).unwrap();
+            } catch (err) {
+              console.log("Deactivate token failed:", err);
+            }
+
+            try {
               await logoutMutation(undefined).unwrap();
             } catch (err) {
               console.log("Backend logout failed:", err);
             } finally {
+              await clearSyncedTokenInfo();
               dispatch(logout());
               router.replace("/");
             }
