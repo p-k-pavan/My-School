@@ -2,13 +2,10 @@ import express from "express";
 import {
   createNotification,
   getNotifications,
-  getNotificationById,
   deleteNotification,
-  markAsRead,
-  markAllAsRead,
-  getUnreadCount,
 } from "../controllers/notification.controller.js";
 import { isAuthenticated } from "../middleware/TokenVerify.js";
+import { authorizeRoles } from "../middleware/role.middleware.js";
 
 
 const router = express.Router();

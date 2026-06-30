@@ -92,5 +92,6 @@ const studentSchema = new mongoose.Schema(
 );
 
 studentSchema.index({ parentId: 1 });
+studentSchema.index({ classId: 1, status: 1 });
 
 export const Student = mongoose.model("Student", studentSchema);

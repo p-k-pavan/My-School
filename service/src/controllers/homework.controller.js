@@ -5,7 +5,11 @@ import { Student } from "../models/student.model.js";
 import { Teacher } from "../models/teacher.model.js";
 import { Class } from "../models/class.model.js";
 import Subject from "../models/subject.model.js";
+import { Parent } from "../models/parent.model.js";
+import { Notification } from "../models/notification.model.js";
 import AppError from "../utils/AppError.js";
+import { sendPushNotificationsAsync } from "../utils/fcm.js";
+
 
 const getFileType = (mimeType) => {
     if (mimeType.includes("pdf")) return "pdf";
@@ -26,7 +30,101 @@ const getFileType = (mimeType) => {
     return "other";
 };
 
-//createHomework
+export const handleHomeworkNotificationAsync = (homework, action, actorId) => {
+    setImmediate(async () => {
+        try {
+            const [klass, subject] = await Promise.all([
+                Class.findById(homework.classId).lean(),
+                Subject.findById(homework.subjectId).lean(),
+            ]);
+
+            if (!klass || !subject) {
+                console.warn(`Unable to send homework notification. Class or Subject not found for Homework: ${homework._id}`);
+                return;
+            }
+
+            const className = `${klass.className}-${klass.section}`;
+
+            const dueDate = new Intl.DateTimeFormat("en-IN", {
+                day: "numeric",
+                month: "short",
+                year: "numeric",
+            }).format(new Date(homework.dueDate));
+
+            const notificationContent = {
+                create: {
+                    title: `New Homework: ${subject.subjectName} (${className})`,
+                    description: `New homework assigned: "${homework.title}". Due Date: ${dueDate}`,
+                },
+
+                update: {
+                    title: `Homework Updated: ${subject.subjectName} (${className})`,
+                    description: `Homework "${homework.title}" has been updated. Due Date: ${dueDate}`,
+                },
+
+                delete: {
+                    title: `Homework Cancelled: ${subject.subjectName} (${className})`,
+                    description: `Homework "${homework.title}" has been cancelled.`,
+                },
+            };
+
+            const content = notificationContent[action];
+
+            if (!content) {
+                console.warn(`Unknown notification action: ${action}`);
+                return;
+            }
+
+            const parentIds = await Student.distinct("parentId", {
+                classId: homework.classId,
+                status: true,
+            });
+
+            const userIds = await Parent.distinct("userId", {
+                _id: { $in: parentIds },
+                status: true,
+            });
+
+            if (!userIds.length) {
+                console.log( `No active parent users found for Class ${className}.` );
+                return;
+            }
+
+            const notification = await Notification.create({
+                title: content.title,
+                description: content.description,
+                type: "homework",
+                receiverType: "classes",
+                targetClasses: [homework.classId],
+                entityId: homework._id,
+                createdBy: actorId,
+            });
+
+            sendPushNotificationsAsync({
+                title: content.title,
+                body: content.description,
+                userIds,
+                data: {
+                    type: "homework",
+                    notificationId: notification._id.toString(),
+                    homeworkId: homework._id.toString(),
+                    action,
+                },
+
+                onSuccess: async () => {
+                    await Notification.findByIdAndUpdate(
+                        notification._id,
+                        { isPushSent: true }
+                    );
+                },
+            });
+
+        } catch (error) {
+            console.error(`Homework notification failed (${action})`, error);
+        }
+    });
+};
+
 export const createHomework = asyncHandler(async (req, res) => {
     const { title, description, classId, subjectId, assignedDate, dueDate } = req.body;
 
@@ -105,14 +203,15 @@ export const createHomework = asyncHandler(async (req, res) => {
         assignedDate: assigned,
         attachments,
         dueDate: due
-    })
+    });
+
+    handleHomeworkNotificationAsync(homework, "create", req.user.id);
 
     return res.status(200).json({
         success: true,
         message: "Homework Created successfully",
         homework,
     });
-
 })
 
 //updateHomework
@@ -183,6 +282,8 @@ export const updateHomework = asyncHandler(async (req, res) => {
 
     await homework.save();
 
+    handleHomeworkNotificationAsync(homework, "update", req.user.id);
+
     return res.status(200).json({
         success: true,
         message: "Homework updated successfully",
@@ -221,6 +322,8 @@ export const deleteHomework = asyncHandler(async (req, res) => {
     }
 
     await Homework.findByIdAndDelete(id);
+
+    handleHomeworkNotificationAsync(homework, "delete", req.user.id);
 
     return res.status(200).json({
         success: true,

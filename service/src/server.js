@@ -36,11 +36,12 @@ const allowedOrigins = [
 app.use(cors({
   origin: (origin, callback) => {
     if (!origin) return callback(null, true);
-    
-    const isAllowed = allowedOrigins.includes(origin) || 
-                      /^http:\/\/192\.168\.\d{1,3}\.\d{1,3}(:\d+)?$/.test(origin) ||
-                      /^http:\/\/10\.0\.2\.2(:\d+)?$/.test(origin);
-                      
+
+    const isAllowed = allowedOrigins.includes(origin) ||
+      /^http:\/\/localhost(:\d+)?$/.test(origin) ||
+      /^http:\/\/192\.168\.\d{1,3}\.\d{1,3}(:\d+)?$/.test(origin) ||
+      /^http:\/\/10\.0\.2\.2(:\d+)?$/.test(origin);
+
     if (isAllowed) {
       callback(null, true);
     } else {
