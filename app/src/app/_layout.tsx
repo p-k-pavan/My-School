@@ -18,6 +18,7 @@ import {
 import { useEffect } from 'react';
 import { useAppSelector } from '@/redux/hooks';
 import { useRegisterDeviceTokenMutation } from '@/redux/api/auth';
+import DeviceInfo from 'react-native-device-info';
 
 messaging().setBackgroundMessageHandler(async remoteMessage => {
   console.log('FCM Message handled in the background!', remoteMessage);
@@ -28,6 +29,8 @@ messaging().setBackgroundMessageHandler(async remoteMessage => {
 function NotificationSyncWrapper({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, user } = useAppSelector((state) => state.auth) as any;
   const [registerDeviceToken] = useRegisterDeviceTokenMutation();
+  const appVersion = DeviceInfo.getVersion();
+  const deviceName = DeviceInfo.getDeviceName();
 
   useEffect(() => {
     createChannel();
@@ -42,7 +45,9 @@ function NotificationSyncWrapper({ children }: { children: React.ReactNode }) {
             token: newToken,
             platform: Platform.OS,
             deviceId,
-            deviceName: `${Platform.OS} Device`,
+            deviceName,
+            osVersion: Platform.Version,
+            appVersion
           }).unwrap();
           await markTokenSynced(newToken, user.id);
           console.log("FCM Token refreshed and synced successfully.");

@@ -1,6 +1,6 @@
 import { PermissionsAndroid, Platform } from "react-native";
 import messaging from '@react-native-firebase/messaging';
-import notifee from '@notifee/react-native';
+import notifee, { AndroidImportance } from '@notifee/react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export const requestPushNotifications = async () => {
@@ -66,7 +66,7 @@ export const shouldSyncToken = async (token: string, userId: string): Promise<bo
 export const markTokenSynced = async (token: string, userId: string): Promise<void> => {
     try {
         await AsyncStorage.setItem(
-            'last_synced_token_info', 
+            'last_synced_token_info',
             JSON.stringify({ token, userId, syncedAt: new Date().toISOString() })
         );
     } catch (err) {
@@ -87,7 +87,9 @@ export const createChannel = async () => {
         await notifee.createChannel({
             id: 'default',
             name: 'Default Channel',
-            importance: 4,
+            importance: AndroidImportance.HIGH,
+            sound: 'message_sound',
+            vibration: true,
         });
     } catch (error) {
         console.error("Error creating Notifee channel:", error);
@@ -97,7 +99,7 @@ export const createChannel = async () => {
 export const showNotifications = async (remoteMessage: any) => {
     try {
         const { notification, data } = remoteMessage;
-        
+
         const title = notification?.title || data?.title || "New Message";
         const body = notification?.body || data?.body || "";
 

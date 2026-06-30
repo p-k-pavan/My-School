@@ -1,58 +1,106 @@
-import { DeviceToken } from "../models/deviceToken.model.js";
 import asyncHandler from "../middleware/asyncHandler.js";
 import AppError from "../utils/AppError.js";
+import { DeviceToken } from "../models/deviceToken.model.js";
 
-// Register or update a device token
 export const registerDeviceToken = asyncHandler(async (req, res) => {
-    const { token, platform, deviceId, deviceName, appVersion, osVersion } = req.body;
+    const {
+        token,
+        platform,
+        deviceId,
+        deviceName,
+        appVersion,
+        osVersion,
+    } = req.body;
 
     if (!token || !platform || !deviceId) {
-        throw new AppError("Token, platform, and deviceId are required", 400);
+        throw new AppError(
+            "Token, platform and deviceId are required",
+            400
+        );
     }
 
     if (!["android", "ios"].includes(platform)) {
-        throw new AppError("Platform must be android or ios", 400);
+        throw new AppError(
+            "Platform must be android or ios",
+            400
+        );
     }
 
-    // Upsert the device token based on deviceId to handle user switches or token updates on the same device
-    const deviceToken = await DeviceToken.findOneAndUpdate(
-        { deviceId },
-        {
+    let device = await DeviceToken.findOne({
+        $or: [
+            {
+                token,
+            },
+            {
+                userId: req.user.id,
+                deviceId,
+            },
+        ],
+    });
+
+    if (device) {
+        device.userId = req.user.id;
+        device.token = token;
+        device.platform = platform;
+        device.deviceName = deviceName || "";
+        device.appVersion = appVersion || "";
+        device.osVersion = osVersion || "";
+        device.lastSeenAt = new Date();
+        device.isActive = true;
+
+        await device.save();
+    } else {
+        device = await DeviceToken.create({
             userId: req.user.id,
             token,
             platform,
+            deviceId,
             deviceName: deviceName || "",
             appVersion: appVersion || "",
             osVersion: osVersion || "",
-            isActive: true,
-            lastSeenAt: new Date()
-        },
-        { upsert: true, new: true }
-    );
+        });
+    }
 
     res.status(200).json({
         success: true,
-        message: "Device token registered successfully",
-        data: deviceToken
+        message: "Device registered successfully.",
+        data: device,
     });
 });
 
-// Deactivate device token (e.g. on logout)
 export const deactivateDeviceToken = asyncHandler(async (req, res) => {
     const { deviceId } = req.body;
 
     if (!deviceId) {
-        throw new AppError("deviceId is required to deactivate token", 400);
+        throw new AppError(
+            "Device ID is required",
+            400
+        );
     }
 
-    // Set token status to inactive
-    await DeviceToken.findOneAndUpdate(
-        { deviceId },
-        { isActive: false }
+    const device = await DeviceToken.findOneAndUpdate(
+        {
+            userId: req.user.id,
+            deviceId,
+        },
+        {
+            isActive: false,
+            lastSeenAt: new Date(),
+        },
+        {
+            returnDocument: "after",
+        }
     );
+
+    if (!device) {
+        throw new AppError(
+            "Device not found",
+            404
+        );
+    }
 
     res.status(200).json({
         success: true,
-        message: "Device token deactivated successfully"
+        message: "Device deactivated successfully.",
     });
 });

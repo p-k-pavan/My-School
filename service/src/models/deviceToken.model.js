@@ -25,11 +25,13 @@ const deviceTokenSchema = new mongoose.Schema(
         deviceId: {
             type: String,
             required: true,
+            trim: true,
         },
 
         deviceName: {
             type: String,
             default: "",
+            trim: true,
         },
 
         appVersion: {
@@ -50,7 +52,6 @@ const deviceTokenSchema = new mongoose.Schema(
         isActive: {
             type: Boolean,
             default: true,
-            index: true,
         },
     },
     {
@@ -58,13 +59,14 @@ const deviceTokenSchema = new mongoose.Schema(
     }
 );
 
+deviceTokenSchema.index(
+    { userId: 1, deviceId: 1 },
+    { unique: true }
+);
+
 deviceTokenSchema.index({
     userId: 1,
     isActive: 1,
-});
-
-deviceTokenSchema.index({
-    deviceId: 1,
 });
 
 export const DeviceToken = mongoose.model(
