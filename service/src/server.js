@@ -20,6 +20,7 @@ import feestructureRoutes from "./routes/feeStructure.route.js";
 import feesRoutes from "./routes/fee.route.js";
 import paymentRoutes from "./routes/payment.route.js";
 import feedRoutes from "./routes/feed.route.js";
+import notificationRoutes from "./routes/notification.route.js";
 
 dotenv.config();
 
@@ -71,6 +72,7 @@ app.use("/api/feestructure", feestructureRoutes);
 app.use("/api/fee", feesRoutes);
 app.use("/api/payment", paymentRoutes);
 app.use("/api/feed", feedRoutes);
+app.use("/api/notification", notificationRoutes)
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
