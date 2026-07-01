@@ -6,6 +6,8 @@ import { Teacher } from "../models/teacher.model.js";
 import { Class } from "../models/class.model.js";
 import AppError from "../utils/AppError.js";
 import asyncHandler from "../middleware/asyncHandler.js";
+import { Notification } from "../models/notification.model.js";
+import { sendPushNotificationsAsync } from "../utils/fcm.js";
 
 const getFileType = (mimeType = "") => {
     if (!mimeType) return "other";
@@ -48,6 +50,122 @@ const getFileType = (mimeType = "") => {
     }
 
     return "other";
+};
+
+export const handleFeedNotificationAsync = (feed, actorId) => {
+    setImmediate(async () => {
+        try {
+
+            let userIds = [];
+
+            switch (feed.visibility) {
+
+                case "all": {
+                    const parentUserIds = await Parent.distinct("userId", { status: true });
+                    const teacherUserIds = await Teacher.distinct("userId", { status: true });
+                    userIds = [...parentUserIds, ...teacherUserIds];
+                    break;
+                }
+
+                case "teachers": {
+                    userIds = await Teacher.distinct("userId", { status: true });
+                    break;
+                }
+
+
+                case "students": {
+                    const parentIds = await Student.distinct("parentId", { status: true });
+                    userIds = await Parent.distinct("userId", {
+                        _id: { $in: parentIds },
+                        status: true,
+                    });
+                    break;
+                }
+
+
+                case "classes": {
+                    const parentIds = await Student.distinct("parentId", {
+                        classId: {
+                            $in: feed.targetClasses,
+                        },
+                        status: true,
+                    });
+                    const parentUserIds = await Parent.distinct(
+                        "userId", {
+                        _id: { $in: parentIds },
+                        status: true,
+                    });
+                    const teacherUserIds = await Teacher.distinct(
+                        "userId", {
+                        assignedClasses: {
+                            $in: feed.targetClasses
+                        },
+                        status: true,
+                    });
+                    userIds = [...parentUserIds, ...teacherUserIds];
+                    break;
+                }
+
+
+                case "individual_students": {
+                    const parentIds = await Student.distinct("parentId",
+                        { _id: { $in: feed.targetStudents } });
+                    userIds = await Parent.distinct("userId",
+                        { _id: { $in: parentIds }, status: true });
+                    break;
+                }
+                default: return;
+            }
+
+            userIds = [
+                ...new Set(
+                    userIds.map(id => id.toString())
+                ),
+            ];
+
+            if (!userIds.length)
+                return;
+
+            const notification =
+                await Notification.create({
+                    title: feed.title,
+                    description: feed.description,
+                    type: "feed",
+                    receiverType: feed.visibility,
+                    receiverIds: feed.visibility === "individual_students" ? userIds : [],
+                    targetClasses: feed.visibility === "classes" ? feed.targetClasses : [],
+                    entityId: feed._id,
+                    createdBy: actorId,
+                });
+
+            sendPushNotificationsAsync({
+                title: feed.title,
+                body: feed.description,
+                userIds,
+                data: {
+                    type: "feed",
+                    feedId: feed._id.toString(),
+                    notificationId: notification._id.toString(),
+                    action: "created",
+                },
+
+                onSuccess: async () => {
+                    await Notification.findByIdAndUpdate(
+                        notification._id, { isPushSent: true, }
+                    );
+
+                },
+
+            });
+
+            console.log(`Feed notification queued for ${userIds.length} users.`);
+
+        } catch (error) {
+
+            console.error("Feed notification failed", error);
+
+        }
+    });
 };
 
 // createFeedPost
@@ -113,7 +231,7 @@ export const createFeedPost = asyncHandler(async (req, res) => {
         }
     }
 
-    const totalSize = req.files?.reduce((sum, file) => sum + file.size, 0 ) || 0;
+    const totalSize = req.files?.reduce((sum, file) => sum + file.size, 0) || 0;
 
     if (totalSize > 50 * 1024 * 1024) {
         throw new AppError("Maximum upload size is 50MB", 400);
@@ -140,6 +258,8 @@ export const createFeedPost = asyncHandler(async (req, res) => {
         targetClasses: visibility === "classes" ? parsedTargetClasses : [],
         targetStudents: visibility === "individual_students" ? parsedTargetStudents : [],
     });
+
+    handleFeedNotificationAsync(feed, req.user.id);
 
     res.status(201).json({
         success: true,
