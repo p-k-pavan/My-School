@@ -85,6 +85,13 @@ export const handleHomeworkNotificationAsync = (homework, action, actorId) => {
                 status: true,
             });
 
+            const TeacherUserId = await Teacher.findOne({ _id: homework.teacherId }).lean();
+
+            userIds = [...new Set([
+                ...userIds,
+                TeacherUserId?.userId
+            ])]
+
             if (!userIds.length) {
                 console.log( `No active parent users found for Class ${className}.` );
                 return;

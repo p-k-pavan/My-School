@@ -6,6 +6,8 @@ import { Teacher } from "../models/teacher.model.js";
 import { Parent } from "../models/parent.model.js";
 import AppError from "../utils/AppError.js";
 import asyncHandler from "../middleware/asyncHandler.js";
+import { Notification } from "../models/notification.model.js";
+import { sendPushNotificationsAsync } from "../utils/fcm.js";
 
 
 const calculateAttendanceCounts = (attendanceArray) => {
@@ -28,6 +30,151 @@ const calculateAttendanceCounts = (attendanceArray) => {
         lateCount,
         halfDayCount,
     };
+};
+
+export const handleAttendanceNotificationAsync = (attendanceRecord, classId) => {
+    setImmediate(async () => {
+        try {
+
+            const klass = await Class.findById(classId)
+                .select("className section")
+                .lean();
+
+            if (!klass) return;
+
+            const className = `${klass.className}-${klass.section}`;
+
+            const attendanceDate = new Intl.DateTimeFormat("en-IN", {
+                day: "numeric",
+                month: "short",
+                year: "numeric",
+            }).format(new Date(attendanceRecord.attendanceDate));
+
+            const teacherTitle = `Attendance Submitted (${className})`;
+
+            const teacherDescription = `Attendance has been successfully submitted for ${className} on ${attendanceDate}.`;
+
+            const teacherNotification =
+                await Notification.create({
+                    title: teacherTitle,
+                    description: teacherDescription,
+                    type: "attendance",
+                    receiverType: "individual_users",
+                    receiverIds: [attendanceRecord.markedBy],
+                    entityId: attendanceRecord._id,
+                    createdBy: attendanceRecord.markedBy,
+                });
+
+            const TeacherUserId = await Teacher.findOne({ _id: attendanceRecord.markedBy }).lean();
+
+            sendPushNotificationsAsync({
+                title: teacherTitle,
+                body: teacherDescription,
+                userIds: [TeacherUserId?.userId],
+                data: {
+                    type: "attendance",
+                    attendanceId: attendanceRecord._id.toString(),
+                    notificationId: teacherNotification._id.toString(),
+                },
+            });
+
+            const notifyList = attendanceRecord.attendance.filter(item =>
+                ["A", "L", "HD"].includes(item.status)
+            );
+
+            if (!notifyList.length) return;
+
+            const studentIds = notifyList.map(item => item.studentId);
+
+            const students = await Student.find({ _id: { $in: studentIds } })
+                .select("studentName parentId")
+                .lean();
+
+            const studentMap = new Map();
+
+            students.forEach(student => {
+                studentMap.set(student._id.toString(), student);
+            });
+
+            const parentIds = students.map(s => s.parentId);
+
+            const parents = await Parent.find({ _id: { $in: parentIds }, status: true })
+                .select("userId")
+                .lean();
+
+            const parentMap = new Map();
+
+            parents.forEach(parent => {
+                parentMap.set(parent._id.toString(), parent);
+            });
+
+            for (const item of notifyList) {
+
+                const student = studentMap.get(
+                    item.studentId.toString()
+                );
+
+                if (!student) continue;
+
+                const parent = parentMap.get(
+                    student.parentId.toString()
+                );
+
+                if (!parent) continue;
+
+                let title = "";
+                let description = "";
+
+                switch (item.status) {
+
+                    case "A":
+                        title = "Student Absent";
+                        description = `${student.studentName} has been marked absent on ${attendanceDate}.`;
+                        break;
+
+                    case "L":
+                        title = "Student Late";
+                        description = `${student.studentName} arrived late on ${attendanceDate}.`;
+                        break;
+
+                    case "HD":
+                        title = "Half Day Attendance";
+                        description = `${student.studentName} has been marked as Half Day on ${attendanceDate}.`;
+                        break;
+                }
+
+                const notification =
+                    await Notification.create({
+                        title,
+                        description,
+                        type: "attendance",
+                        receiverType: "individual_users",
+                        receiverIds: [parent.userId],
+                        entityId: attendanceRecord._id,
+                        createdBy: attendanceRecord.markedBy,
+                    });
+
+                sendPushNotificationsAsync({
+                    title,
+                    body: description,
+                    userIds: [parent.userId.toString()],
+                    data: {
+                        type: "attendance",
+                        attendanceId: attendanceRecord._id.toString(),
+                        notificationId: notification._id.toString(),
+                        studentId: item.studentId.toString(),
+                        status: item.status,
+                        action: "marked",
+                    },
+                });
+            }
+
+            console.log(`Attendance notifications completed for ${notifyList.length} students.`);
+
+        } catch (error) {
+            console.error("Attendance notification failed", error);
+        }
+    });
 };
 
 
@@ -86,6 +233,8 @@ export const markAttendance = asyncHandler(async (req, res) => {
             runValidators: true,
         }
     );
+
+    handleAttendanceNotificationAsync(attendanceRecord, classId);
 
     res.status(201).json({
         success: true,
