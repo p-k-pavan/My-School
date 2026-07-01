@@ -7,6 +7,92 @@ import AppError from "../utils/AppError.js";
 import PDFDocument from "pdfkit"; 
 import ExcelJS from "exceljs"; 
 
+export const handleFeePaymentNotificationAsync = ( payment, actorId) => {
+    setImmediate(async () => {
+        try {
+            const [student, fee] = await Promise.all([
+                Student.findById(payment.studentId)
+                    .select("studentName classId parentId")
+                    .lean(),
+
+                Fee.findById(payment.studentFeeId)
+                    .select("dueAmount paidAmount totalFee")
+                    .lean(),
+            ]);
+
+            if (!student || !fee) {
+                console.warn( `Student or Fee not found for Payment ${payment._id}`);
+                return;
+            }
+
+            const [klass, parent] = await Promise.all([
+                Class.findById(student.classId)
+                    .select("className section")
+                    .lean(),
+
+                Parent.findById(student.parentId)
+                    .select("userId")
+                    .lean(),
+            ]);
+
+            if (!klass || !parent?.userId) {
+                console.warn(`Class or Parent not found for Student ${student._id}`);
+                return;
+            }
+
+            const paymentDate = new Intl.DateTimeFormat("en-IN", {
+                day: "numeric",
+                month: "short",
+                year: "numeric",
+            }).format(new Date(payment.paymentDate));
+
+            const className = `${klass.className}-${klass.section}`;
+
+            const title = "Fee Payment Received";
+
+            const description =
+                `₹${payment.amount} fee payment has been received for ` +
+                `${student.studentName} (${className}) on ${paymentDate}. ` +
+                `Remaining Due: ₹${fee.dueAmount}.`;
+
+            const notification = await Notification.create({
+                title,
+                description,
+                type: "fees",
+                receiverType: "individual_users",
+                receiverIds: [parent.userId],
+                entityId: payment._id,
+                createdBy: actorId,
+            });
+
+            sendPushNotificationsAsync({
+                title,
+                body: description,
+                userIds: [parent.userId.toString()],
+                data: {
+                    type: "fees",
+                    notificationId: notification._id.toString(),
+                    paymentId: payment._id.toString(),
+                    feeId: fee._id.toString(),
+                    studentId: student._id.toString(),
+                    action: "Payment Received",
+                },
+
+                onSuccess: async () => {
+                    await Notification.findByIdAndUpdate(notification._id,{
+                            isPushSent: true,
+                        }
+                    );
+                },
+            });
+
+            console.log(`Fee payment notification sent to parent of ${student.studentName}`);
+            
+        } catch (error) {
+            console.error( "Fee payment notification failed", error );
+        }
+    });
+};
 
 export const createFeePayment = asyncHandler(async (req, res) => {
     const {
@@ -268,7 +354,6 @@ export const voidFeePayment = asyncHandler(async (req, res) => {
         });
 });
  
-// downloadFeeReceipt
 export const downloadFeeReceipt = asyncHandler(async (req, res) => {
     const { id } = req.params;
  
@@ -321,7 +406,6 @@ export const downloadFeeReceipt = asyncHandler(async (req, res) => {
     doc.end();
 });
  
-// exportPaymentsToExcel
 export const exportPaymentsToExcel = asyncHandler(async (req, res) => {
     const { studentId, paymentMethod, paymentStatus, startDate, endDate } = req.query;
  
