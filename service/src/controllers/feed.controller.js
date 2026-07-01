@@ -146,7 +146,7 @@ export const handleFeedNotificationAsync = (feed, actorId) => {
                     type: "feed",
                     feedId: feed._id.toString(),
                     notificationId: notification._id.toString(),
-                    action: "created",
+                    action: "publish",
                 },
 
                 onSuccess: async () => {

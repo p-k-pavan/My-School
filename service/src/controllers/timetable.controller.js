@@ -5,6 +5,10 @@ import { Subject } from "../models/subject.model.js";
 import { Teacher } from "../models/teacher.model.js";
 import AppError from "../utils/AppError.js";
 import asyncHandler from "../middleware/asyncHandler.js";
+import { sendPushNotificationsAsync } from "../utils/fcm.js";
+import { Notification } from "../models/notification.model.js";
+import { Student } from "../models/student.model.js";
+import { Parent } from "../models/parent.model.js";
 
 const validatePeriods = async (periods, classId) => {
     const uniquePeriodNos = new Set();

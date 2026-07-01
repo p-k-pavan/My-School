@@ -75,6 +75,7 @@ export const handleAttendanceNotificationAsync = (attendanceRecord, classId) => 
                     type: "attendance",
                     attendanceId: attendanceRecord._id.toString(),
                     notificationId: teacherNotification._id.toString(),
+                     action: "mark",
                 },
             });
 
@@ -164,7 +165,7 @@ export const handleAttendanceNotificationAsync = (attendanceRecord, classId) => 
                         notificationId: notification._id.toString(),
                         studentId: item.studentId.toString(),
                         status: item.status,
-                        action: "marked",
+                        action: "mark",
                     },
                 });
             }

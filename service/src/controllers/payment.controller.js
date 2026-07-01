@@ -6,6 +6,10 @@ import { Student } from "../models/student.model.js";
 import AppError from "../utils/AppError.js";
 import PDFDocument from "pdfkit"; 
 import ExcelJS from "exceljs"; 
+import { Notification } from "../models/notification.model.js";
+import { sendPushNotificationsAsync } from "../utils/fcm.js";
+import { Class } from "../models/class.model.js";
+import { Parent } from "../models/parent.model.js";
 
 export const handleFeePaymentNotificationAsync = ( payment, actorId) => {
     setImmediate(async () => {
@@ -75,7 +79,7 @@ export const handleFeePaymentNotificationAsync = ( payment, actorId) => {
                     paymentId: payment._id.toString(),
                     feeId: fee._id.toString(),
                     studentId: student._id.toString(),
-                    action: "Payment Received",
+                    action: "paid",
                 },
 
                 onSuccess: async () => {
