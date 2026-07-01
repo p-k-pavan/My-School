@@ -40,7 +40,7 @@ const validatePeriods = async (periods, classId) => {
     }
 };
 
-export const handleTimetableNotificationAsync = ( timetable, action, actorId ) => {
+export const handleTimetableNotificationAsync = (timetable, action, actorId) => {
     setImmediate(async () => {
         try {
             const klass = await Class.findById(timetable.classId)
@@ -105,7 +105,7 @@ export const handleTimetableNotificationAsync = ( timetable, action, actorId ) =
             );
 
             if (!userIds.length) {
-                console.log( `No users found for timetable notification.` );
+                console.log(`No users found for timetable notification.`);
                 return;
             }
 
@@ -132,16 +132,16 @@ export const handleTimetableNotificationAsync = ( timetable, action, actorId ) =
 
                 onSuccess: async () => {
                     await Notification.findByIdAndUpdate(
-                        notification._id,{
-                            isPushSent: true,
-                        });
+                        notification._id, {
+                        isPushSent: true,
+                    });
                 },
             });
 
-            console.log( `Timetable notification queued for ${userIds.length} users.` );
+            console.log(`Timetable notification queued for ${userIds.length} users.`);
 
         } catch (error) {
-            console.error( `Timetable notification failed`, error );
+            console.error(`Timetable notification failed`, error);
         }
     });
 };
@@ -186,6 +186,8 @@ export const createTimetable = asyncHandler(async (req, res) => {
         academicYear: academicYear.trim(),
         isActive: isActive !== undefined ? isActive : true,
     });
+
+    handleTimetableNotificationAsync(newTimetable, "create", req.user.id);
 
     res.status(201).json({
         success: true,
@@ -288,6 +290,8 @@ export const updateTimetable = asyncHandler(async (req, res) => {
     }
 
     await timetable.save();
+
+    handleTimetableNotificationAsync(timetable, "update", req.user.id);
 
     res.status(200).json({
         success: true,
