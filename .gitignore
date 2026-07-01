@@ -36,6 +36,7 @@ app/*.pem
 # local env files
 app/.env
 service/.env
+service/src/config/serviceAccountKey.json
 
 # typescript
 app/*.tsbuildinfo
