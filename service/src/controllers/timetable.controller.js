@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import Timetable from "../models/timetable.model.js";
 import { Class } from "../models/class.model.js";
-import Subject from "../models/subject.model.js";
+import { Subject } from "../models/subject.model.js";
 import { Teacher } from "../models/teacher.model.js";
 import AppError from "../utils/AppError.js";
 import asyncHandler from "../middleware/asyncHandler.js";
@@ -38,6 +38,112 @@ const validatePeriods = async (periods, classId) => {
             throw new AppError(`Teacher not found: ${teacherId}`, 404);
         }
     }
+};
+
+export const handleTimetableNotificationAsync = ( timetable, action, actorId ) => {
+    setImmediate(async () => {
+        try {
+            const klass = await Class.findById(timetable.classId)
+                .select("className section")
+                .lean();
+
+            if (!klass) {
+                console.warn(`Class not found for timetable ${timetable._id}`);
+                return;
+            }
+
+            const className = `${klass.className}-${klass.section}`;
+
+            const notificationContent = {
+                create: {
+                    title: `New Timetable Published`,
+                    description: `A new timetable has been published for Class ${className}. Please check the latest schedule.`,
+                },
+
+                update: {
+                    title: `Timetable Updated`,
+                    description: `The timetable for Class ${className} has been updated. Please check the latest schedule.`,
+                },
+            };
+
+            const content = notificationContent[action];
+
+            if (!content) return;
+
+            const parentIds = await Student.distinct("parentId", {
+                classId: timetable.classId,
+                status: true,
+            });
+
+            const parentUserIds = await Parent.distinct("userId", {
+                _id: { $in: parentIds },
+                status: true,
+            });
+
+            const teacherIds = [
+                ...new Set(
+                    timetable.periods.map(period =>
+                        period.teacherId.toString()
+                    )
+                ),
+            ];
+
+            const teacherUserIds = await Teacher.distinct("userId", {
+                _id: { $in: teacherIds },
+                status: true,
+            });
+
+            let userIds = [
+                ...new Set([
+                    ...parentUserIds.map(id => id.toString()),
+                    ...teacherUserIds.map(id => id.toString()),
+                ]),
+            ];
+
+            userIds = userIds.filter(
+                id => id !== actorId.toString()
+            );
+
+            if (!userIds.length) {
+                console.log( `No users found for timetable notification.` );
+                return;
+            }
+
+            const notification = await Notification.create({
+                title: content.title,
+                description: content.description,
+                type: "timetable",
+                receiverType: "classes",
+                targetClasses: [timetable.classId],
+                entityId: timetable._id,
+                createdBy: actorId,
+            });
+
+            sendPushNotificationsAsync({
+                title: content.title,
+                body: content.description,
+                userIds,
+                data: {
+                    type: "timetable",
+                    timetableId: timetable._id.toString(),
+                    notificationId: notification._id.toString(),
+                    action,
+                },
+
+                onSuccess: async () => {
+                    await Notification.findByIdAndUpdate(
+                        notification._id,{
+                            isPushSent: true,
+                        });
+                },
+            });
+
+            console.log( `Timetable notification queued for ${userIds.length} users.` );
+
+        } catch (error) {
+            console.error( `Timetable notification failed`, error );
+        }
+    });
 };
 
 export const createTimetable = asyncHandler(async (req, res) => {
