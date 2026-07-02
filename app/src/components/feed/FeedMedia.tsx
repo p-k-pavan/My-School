@@ -294,10 +294,8 @@ const FeedMediaCarousel: React.FC<FeedMediaCarouselProps> = ({ attachments, isAc
     if (slide.slideType === "pdf") {
       const pdfUrl = getAttachmentUrl(slide.fileUrl);
       return (
-        <TouchableOpacity
+        <View
           key={slide.id}
-          onPress={() => openFile(slide.fileUrl)}
-          activeOpacity={0.95}
           style={{ width: finalItemWidth, height: 350 }}
           className="mr-3 rounded-2xl border border-slate-200 bg-white shadow-xs overflow-hidden relative"
         >
@@ -313,9 +311,7 @@ const FeedMediaCarousel: React.FC<FeedMediaCarouselProps> = ({ attachments, isAc
             fileName={slide.fileName}
             fileSize={slide.fileSize}
           />
-
-
-        </TouchableOpacity>
+        </View>
       );
     }
 
