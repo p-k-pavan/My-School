@@ -80,7 +80,7 @@ export const handleHomeworkNotificationAsync = (homework, action, actorId) => {
                 status: true,
             });
 
-            const userIds = await Parent.distinct("userId", {
+            let userIds = await Parent.distinct("userId", {
                 _id: { $in: parentIds },
                 status: true,
             });

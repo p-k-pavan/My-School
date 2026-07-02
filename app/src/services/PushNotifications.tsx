@@ -106,8 +106,10 @@ export const showNotifications = async (remoteMessage: any) => {
         await notifee.displayNotification({
             title,
             body,
+            data: data,
             android: {
                 channelId: 'default',
+                smallIcon: 'educonnect_logo',
                 pressAction: {
                     id: 'default'
                 }

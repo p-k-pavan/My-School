@@ -4,7 +4,6 @@
 app/node_modules/
 service/node_modules/
 service/uploads/
-app/android
 
 # Expo
 app/.expo/
@@ -28,6 +27,7 @@ app/.metro-health-check*
 app/npm-debug.*
 app/yarn-debug.*
 app/yarn-error.*
+app/android/app/google-services.json
 
 # macOS
 app/.DS_Store
@@ -42,7 +42,3 @@ service/src/config/serviceAccountKey.json
 app/*.tsbuildinfo
 
 example
-
-# generated native folders
-app//ios
-app//android

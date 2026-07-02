@@ -174,6 +174,8 @@ export const createFeePayment = asyncHandler(async (req, res) => {
 
         await fee.save();
 
+        handleFeePaymentNotificationAsync(payment[0], req.user.id);
+
         return res.status(201).json({
             success: true,
             message: "Payment recorded successfully",

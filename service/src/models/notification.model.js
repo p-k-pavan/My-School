@@ -28,6 +28,7 @@ const notificationSchema = new mongoose.Schema(
                 "feed",
                 "holiday",
                 "general",
+                "timetable",
             ],
             default: "general",
             index: true,

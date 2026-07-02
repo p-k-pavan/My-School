@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import Timetable from "../models/timetable.model.js";
 import { Class } from "../models/class.model.js";
-import { Subject } from "../models/subject.model.js";
+import Subject from "../models/subject.model.js";
 import { Teacher } from "../models/teacher.model.js";
 import AppError from "../utils/AppError.js";
 import asyncHandler from "../middleware/asyncHandler.js";
@@ -131,6 +131,7 @@ export const handleTimetableNotificationAsync = (timetable, action, actorId) => 
                     type: "timetable",
                     timetableId: timetable._id.toString(),
                     notificationId: notification._id.toString(),
+                    day,
                     action,
                 },
 
