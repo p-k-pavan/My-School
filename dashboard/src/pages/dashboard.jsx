@@ -26,7 +26,6 @@ export default function Dashboard() {
     const { data: responseData, isLoading, isError, refetch } = useGetDashboardOverviewQuery();
     const stats = responseData?.data;
 
-    // Helper to format currency in INR
     const formatCurrency = (amount) => {
         return new Intl.NumberFormat("en-IN", {
             style: "currency",
@@ -35,7 +34,6 @@ export default function Dashboard() {
         }).format(amount || 0);
     };
 
-    // Helper to format Date
     const formatDate = (dateStr) => {
         if (!dateStr) return "N/A";
         return new Date(dateStr).toLocaleDateString("en-IN", {
@@ -45,7 +43,6 @@ export default function Dashboard() {
         });
     };
 
-    // Helper to format Date with Time
     const formatDateTime = (dateStr) => {
         if (!dateStr) return "N/A";
         return new Date(dateStr).toLocaleDateString("en-IN", {
@@ -56,7 +53,6 @@ export default function Dashboard() {
         });
     };
 
-    // Get greeting message based on time of day
     const getGreeting = () => {
         const hour = new Date().getHours();
         if (hour < 12) return "Good morning";
@@ -64,7 +60,6 @@ export default function Dashboard() {
         return "Good evening";
     };
 
-    // Loading State Skeleton
     if (isLoading) {
         return (
             <div className="space-y-6 animate-pulse">
@@ -75,7 +70,6 @@ export default function Dashboard() {
                     </div>
                 </div>
 
-                {/* KPI Skeletons */}
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                     {[1, 2, 3, 4].map((i) => (
                         <Card key={i} className="border border-border bg-card">
@@ -91,7 +85,6 @@ export default function Dashboard() {
                     ))}
                 </div>
 
-                {/* Progress / Chart Skeletons */}
                 <div className="grid gap-6 md:grid-cols-2">
                     {[1, 2].map((i) => (
                         <Card key={i} className="border border-border bg-card">
@@ -109,7 +102,6 @@ export default function Dashboard() {
         );
     }
 
-    // Error State
     if (isError) {
         return (
             <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
@@ -137,7 +129,6 @@ export default function Dashboard() {
         classWiseDistribution = []
     } = stats || {};
 
-    // Calculate dynamic rates
     const maxClassStrength = Math.max(...classWiseDistribution.map(c => c.studentCount), 1);
     const feeCollectionRate = feesOverview.totalExpected > 0
         ? Math.round((feesOverview.totalPaid / feesOverview.totalExpected) * 100)
@@ -145,10 +136,9 @@ export default function Dashboard() {
 
     return (
         <div className="space-y-8 pb-10">
-            {/* Header Greeting */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-border/60 pb-6">
                 <div>
-                    <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-neutral-900 to-neutral-600 dark:from-white dark:to-neutral-400 bg-clip-text text-transparent">
+                    <h1 className="text-3xl font-extrabold tracking-tight bg-linear-to-r from-neutral-900 to-neutral-600 dark:from-white dark:to-neutral-400 bg-clip-text text-transparent">
                         {getGreeting()}, {greetingName}
                     </h1>
                     <p className="text-muted-foreground text-sm mt-1">
@@ -163,9 +153,7 @@ export default function Dashboard() {
                 </div>
             </div>
 
-            {/* KPI Stats Grid */}
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-                {/* Students Card */}
                 <Card className="border border-border bg-card shadow-sm hover:shadow-md hover:scale-[1.01] transition-all duration-300">
                     <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
                         <CardTitle className="text-xs uppercase font-bold tracking-wider text-muted-foreground">Students</CardTitle>
@@ -184,7 +172,6 @@ export default function Dashboard() {
                     </CardContent>
                 </Card>
 
-                {/* Teachers Card */}
                 <Card className="border border-border bg-card shadow-sm hover:shadow-md hover:scale-[1.01] transition-all duration-300">
                     <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
                         <CardTitle className="text-xs uppercase font-bold tracking-wider text-muted-foreground">Teachers</CardTitle>
@@ -203,7 +190,6 @@ export default function Dashboard() {
                     </CardContent>
                 </Card>
 
-                {/* Classes Card */}
                 <Card className="border border-border bg-card shadow-sm hover:shadow-md hover:scale-[1.01] transition-all duration-300">
                     <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
                         <CardTitle className="text-xs uppercase font-bold tracking-wider text-muted-foreground">Classes</CardTitle>
@@ -221,7 +207,6 @@ export default function Dashboard() {
                     </CardContent>
                 </Card>
 
-                {/* Parents Card */}
                 <Card className="border border-border bg-card shadow-sm hover:shadow-md hover:scale-[1.01] transition-all duration-300">
                     <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
                         <CardTitle className="text-xs uppercase font-bold tracking-wider text-muted-foreground">Parents</CardTitle>
@@ -240,9 +225,7 @@ export default function Dashboard() {
                 </Card>
             </div>
 
-            {/* Financial Status & Attendance Rings */}
             <div className="grid gap-6 md:grid-cols-2">
-                {/* Financial Insights Card */}
                 <Card className="border border-border bg-card shadow-sm">
                     <CardHeader className="pb-3 border-b border-border/40">
                         <CardTitle className="text-lg font-bold flex items-center gap-2">
@@ -253,7 +236,6 @@ export default function Dashboard() {
                     </CardHeader>
                     <CardContent className="pt-6">
                         <div className="flex flex-col sm:flex-row items-center gap-8 justify-around">
-                            {/* SVG Gauge */}
                             <div className="relative flex items-center justify-center">
                                 <svg className="w-36 h-36 transform -rotate-90">
                                     <circle
@@ -280,8 +262,7 @@ export default function Dashboard() {
                                 </div>
                             </div>
 
-                            {/* Details List */}
-                            <div className="space-y-4 w-full sm:w-auto min-w-[180px]">
+                            <div className="space-y-4 w-full sm:w-auto min-w-45">
                                 <div className="border-b border-border/40 pb-2">
                                     <span className="text-[10px] uppercase font-bold text-muted-foreground">Total Expected</span>
                                     <div className="text-xl font-extrabold text-foreground">{formatCurrency(feesOverview.totalExpected)}</div>
@@ -297,7 +278,6 @@ export default function Dashboard() {
                             </div>
                         </div>
 
-                        {/* Breakdown bar */}
                         <div className="mt-8 space-y-3">
                             <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Collection Methods</span>
                             <div className="grid grid-cols-5 gap-2.5 text-center">
@@ -312,7 +292,6 @@ export default function Dashboard() {
                     </CardContent>
                 </Card>
 
-                {/* Attendance Rate Card */}
                 <Card className="border border-border bg-card shadow-sm">
                     <CardHeader className="pb-3 border-b border-border/40">
                         <CardTitle className="text-lg font-bold flex items-center gap-2">
@@ -327,7 +306,6 @@ export default function Dashboard() {
                     </CardHeader>
                     <CardContent className="pt-6">
                         <div className="flex flex-col sm:flex-row items-center gap-8 justify-around">
-                            {/* SVG Gauge */}
                             <div className="relative flex items-center justify-center">
                                 <svg className="w-36 h-36 transform -rotate-90">
                                     <circle
@@ -354,8 +332,7 @@ export default function Dashboard() {
                                 </div>
                             </div>
 
-                            {/* Details List */}
-                            <div className="space-y-4 w-full sm:w-auto min-w-[180px]">
+                            <div className="space-y-4 w-full sm:w-auto min-w-45">
                                 <div className="border-b border-border/40 pb-2">
                                     <span className="text-[10px] uppercase font-bold text-muted-foreground">Students Present</span>
                                     <div className="text-xl font-extrabold text-foreground">{attendanceToday.presentCount || 0}</div>
@@ -373,7 +350,6 @@ export default function Dashboard() {
                             </div>
                         </div>
 
-                        {/* Visual counts */}
                         <div className="mt-8 space-y-3">
                             <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Roll breakdown</span>
                             <div className="grid grid-cols-4 gap-2.5 text-center">
@@ -399,11 +375,8 @@ export default function Dashboard() {
                 </Card>
             </div>
 
-            {/* Split layout: Recent Activities & Class Distribution */}
             <div className="grid gap-6 lg:grid-cols-3">
-                {/* Left Columns - Activities (Span 2) */}
                 <div className="lg:col-span-2 space-y-6">
-                    {/* Recent Payments */}
                     <Card className="border border-border bg-card shadow-sm">
                         <CardHeader className="pb-3 border-b border-border/40">
                             <CardTitle className="text-sm font-black flex items-center gap-2">
@@ -425,7 +398,7 @@ export default function Dashboard() {
                                                     ₹
                                                 </div>
                                                 <div>
-                                                    <h4 className="text-xs font-bold text-foreground truncate max-w-[180px] sm:max-w-xs">
+                                                    <h4 className="text-xs font-bold text-foreground truncate max-w-45 sm:max-w-xs">
                                                         {payment.studentId?.studentName || "Unknown Student"}
                                                     </h4>
                                                     <p className="text-[10px] text-muted-foreground mt-0.5">
@@ -448,7 +421,6 @@ export default function Dashboard() {
                         </CardContent>
                     </Card>
 
-                    {/* Recent Admissions */}
                     <Card className="border border-border bg-card shadow-sm">
                         <CardHeader className="pb-3 border-b border-border/40">
                             <CardTitle className="text-sm font-black flex items-center gap-2">
@@ -501,7 +473,6 @@ export default function Dashboard() {
                         </CardContent>
                     </Card>
 
-                    {/* Circulars / School Feed */}
                     <Card className="border border-border bg-card shadow-sm">
                         <CardHeader className="pb-3 border-b border-border/40">
                             <CardTitle className="text-sm font-black flex items-center gap-2">
@@ -547,7 +518,6 @@ export default function Dashboard() {
                     </Card>
                 </div>
 
-                {/* Right Column - Class Strength Distribution */}
                 <div>
                     <Card className="border border-border bg-card shadow-sm h-full flex flex-col">
                         <CardHeader className="pb-3 border-b border-border/40">
