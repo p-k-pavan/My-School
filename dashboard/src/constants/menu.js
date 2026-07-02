@@ -103,20 +103,7 @@ export const menus = [
   },
 
   {
-    name: "Circulars",
-    path: "/circulars",
-    icon: LuBell,
-    roles: ["management", "admin"],
-  },
-
-  {
-    name: "Gallery",
-    path: "/gallery",
-    icon: LuGalleryThumbnails,
-    roles: ["management", "admin"],
-  },
-  {
-    name: "School Feed",
+    name: "Announcements",
     path: "/feed",
     icon: LuMegaphone,
     roles: ["management", "admin", "teacher", "parent"],
