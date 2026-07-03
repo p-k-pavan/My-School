@@ -22,6 +22,7 @@ import paymentRoutes from "./routes/payment.route.js";
 import feedRoutes from "./routes/feed.route.js";
 import notificationRoutes from "./routes/notification.route.js";
 import dashboardRoutes from "./routes/dashboard.route.js";
+import auditLogRoutes from "./routes/auditLog.route.js";
 
 dotenv.config();
 
@@ -76,6 +77,7 @@ app.use("/api/payment", paymentRoutes);
 app.use("/api/feed", feedRoutes);
 app.use("/api/notification", notificationRoutes);
 app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/audit-log", auditLogRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
