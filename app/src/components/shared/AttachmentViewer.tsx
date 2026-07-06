@@ -86,8 +86,8 @@ const AttachmentViewer: React.FC<AttachmentViewerProps> = ({
     <View className="mt-1">
       <TouchableOpacity
         onPress={() => setIsExpanded(!isExpanded)}
+        activeOpacity={0.7}
         className="flex-row items-center justify-between bg-slate-50 border border-slate-100 rounded-lg p-2 mb-1.5"
-        style={{ activeOpacity: 0.7 } as any}
       >
         <View className="flex-row items-center gap-1.5">
           <Ionicons

@@ -131,7 +131,13 @@ const PdfPreview: React.FC<PdfPreviewProps> = ({
                 >
                   <View
                     style={[
-                      styles.sliderThumb,
+                      styles.sliderFill,
+                      { width: `${totalPages > 0 ? (page / totalPages) * 100 : 0}%` },
+                    ]}
+                  />
+                  <View
+                    style={[
+                      styles.sliderKnob,
                       {
                         left: `${totalPages > 1 ? ((page - 1) / (totalPages - 1)) * 100 : 0}%`,
                       },
