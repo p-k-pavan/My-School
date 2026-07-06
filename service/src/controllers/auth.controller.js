@@ -3,6 +3,8 @@ import asyncHandler from "../middleware/asyncHandler.js";
 import AppError from "../utils/AppError.js";
 import bcrypt from "bcryptjs"
 import { generateToken } from "../utils/generateToken.js";
+import generatedOtp from "../utils/generatedOTP.js";
+import sendMail from "../config/sendMail.js";
 
 export const login = asyncHandler(async (req, res) => {
     const { email, password } = req.body;
@@ -124,3 +126,115 @@ export const changePassword = asyncHandler(
         });
     }
 );
+
+export const forgotPassword = asyncHandler(async (req, res) => {
+    const { email } = req.body;
+
+    if (!email) {
+        throw new AppError("Email is required", 400);
+    }
+
+    const user = await User.findOne({ email });
+    if (!user) {
+        throw new AppError("User not found", 404);
+    }
+
+    const otp = generatedOtp().toString();
+    const otpExpires = new Date(Date.now() + 15 * 60 * 1000);
+
+    user.resetPasswordOtp = otp;
+    user.resetPasswordOtpExpires = otpExpires;
+    user.isResetOtpVerified = false;
+    await user.save();
+
+    const subject = "Password Reset OTP";
+    const htmlContent = `
+        <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+            <h2>Password Reset Request</h2>
+            <p>You requested to reset your password. Use the following One-Time Password (OTP) to proceed:</p>
+            <div style="font-size: 24px; font-weight: bold; background-color: #f4f4f4; padding: 10px 20px; display: inline-block; border-radius: 5px; letter-spacing: 2px; margin: 15px 0;">
+                ${otp}
+            </div>
+            <p>This OTP is valid for <strong>15 minutes</strong>. If you did not request a password reset, please ignore this email.</p>
+        </div>
+    `;
+
+    try {
+        await sendMail(email, subject, htmlContent);
+    } catch (error) {
+        console.error("Failed to send password reset email:", error);
+        throw new AppError("Failed to send OTP email. Please try again later.", 500);
+    }
+
+    res.status(200).json({
+        success: true,
+        message: "OTP sent to your email",
+    });
+});
+
+export const verifyForgotPasswordOtp = asyncHandler(async (req, res) => {
+    const { email, otp } = req.body;
+
+    if (!email || !otp) {
+        throw new AppError("Email and OTP are required", 400);
+    }
+
+    const user = await User.findOne({ email });
+    if (!user) {
+        throw new AppError("User not found", 404);
+    }
+
+    if (!user.resetPasswordOtp || !user.resetPasswordOtpExpires) {
+        throw new AppError("No OTP requested for this user", 400);
+    }
+
+    const isExpired = new Date() > new Date(user.resetPasswordOtpExpires);
+    const isMatch = user.resetPasswordOtp === otp.toString().trim();
+
+    if (isExpired) {
+        throw new AppError("OTP has expired", 400);
+    }
+
+    if (!isMatch) {
+        throw new AppError("Invalid OTP", 400);
+    }
+
+    user.isResetOtpVerified = true;
+    await user.save();
+
+    res.status(200).json({
+        success: true,
+        message: "OTP verified successfully",
+    });
+});
+
+export const resetPassword = asyncHandler(async (req, res) => {
+    const { email, newPassword } = req.body;
+
+    if (!email || !newPassword) {
+        throw new AppError("Email and new password are required", 400);
+    }
+
+    const user = await User.findOne({ email });
+    if (!user) {
+        throw new AppError("User not found", 404);
+    }
+
+    if (!user.isResetOtpVerified) {
+        throw new AppError("OTP has not been verified yet", 400);
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    user.password = hashedPassword;
+    user.resetPasswordOtp = undefined;
+    user.resetPasswordOtpExpires = undefined;
+    user.isResetOtpVerified = false;
+    await user.save();
+
+    res.status(200).json({
+        success: true,
+        message: "Password reset successful",
+    });
+});
+

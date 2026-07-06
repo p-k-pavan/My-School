@@ -3,7 +3,10 @@ import {
   changePassword,
   getCurrentUser,
   login,
-  logout
+  logout,
+  forgotPassword,
+  verifyForgotPasswordOtp,
+  resetPassword
 } from "../controllers/auth.controller.js";
 import {
   registerDeviceToken,
@@ -20,5 +23,9 @@ router.get("/me", isAuthenticated, getCurrentUser);
 router.put("/change-password", isAuthenticated, changePassword);
 router.post("/device-token", isAuthenticated, registerDeviceToken);
 router.post("/device-token/deactivate", isAuthenticated, deactivateDeviceToken);
+
+router.post("/forgot-password", forgotPassword);
+router.post("/verify-otp", verifyForgotPasswordOtp);
+router.post("/reset-password", resetPassword);
 
 export default router;
