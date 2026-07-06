@@ -9,6 +9,7 @@ import { Parent } from "../models/parent.model.js";
 import { Notification } from "../models/notification.model.js";
 import AppError from "../utils/AppError.js";
 import { sendPushNotificationsAsync } from "../utils/fcm.js";
+import { uploadToCloudinary, deleteFromCloudinary } from "../utils/cloudinary.js";
 
 
 const getFileType = (mimeType) => {
@@ -168,11 +169,17 @@ export const createHomework = asyncHandler(async (req, res) => {
     const assigned = new Date(assignedDate);
     const due = new Date(dueDate);
 
-    const attachments = req.files?.map((file) => ({
-        fileName: file.originalname,
-        fileUrl: file.path.replace(/\\/g, "/"),
-        fileType: getFileType(file.mimetype),
-    })) || [];
+    const uploadPromises = req.files?.map(async (file) => {
+        const uploadResult = await uploadToCloudinary(file.path, "homework_attachments");
+        return {
+            fileName: file.originalname,
+            fileUrl: uploadResult.secure_url,
+            fileType: getFileType(file.mimetype),
+            publicId: uploadResult.public_id,
+        };
+    }) || [];
+
+    const attachments = await Promise.all(uploadPromises);
 
     if (assigned >= due) {
         throw new AppError(
@@ -272,11 +279,27 @@ export const updateHomework = asyncHandler(async (req, res) => {
         ? JSON.parse(req.body.existingAttachments)
         : [];
 
-    const newAttachments = (req.files || []).map((file) => ({
-        fileName: file.originalname,
-        fileUrl: file.path,
-        fileType: getFileType(file.mimetype),
-    }));
+    const existingUrls = existingAttachments.map(item => item.fileUrl);
+    const removedAttachments = homework.attachments.filter(
+        item => !existingUrls.includes(item.fileUrl)
+    );
+    for (const attachment of removedAttachments) {
+        if (attachment.publicId) {
+            const resourceType = attachment.fileType === "image" ? "image" : (attachment.fileType === "video" ? "video" : "raw");
+            await deleteFromCloudinary(attachment.publicId, resourceType);
+        }
+    }
+
+    const uploadPromises = (req.files || []).map(async (file) => {
+        const uploadResult = await uploadToCloudinary(file.path, "homework_attachments");
+        return {
+            fileName: file.originalname,
+            fileUrl: uploadResult.secure_url,
+            fileType: getFileType(file.mimetype),
+            publicId: uploadResult.public_id,
+        };
+    });
+    const newAttachments = await Promise.all(uploadPromises);
 
     homework.attachments = [
         ...existingAttachments,
@@ -326,6 +349,15 @@ export const deleteHomework = asyncHandler(async (req, res) => {
             "You are not authorized to delete this homework",
             403
         );
+    }
+
+    if (homework.attachments && homework.attachments.length > 0) {
+        for (const attachment of homework.attachments) {
+            if (attachment.publicId) {
+                const resourceType = attachment.fileType === "image" ? "image" : (attachment.fileType === "video" ? "video" : "raw");
+                await deleteFromCloudinary(attachment.publicId, resourceType);
+            }
+        }
     }
 
     await Homework.findByIdAndDelete(id);

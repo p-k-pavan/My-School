@@ -43,6 +43,7 @@ const homeworkSchema = new mongoose.Schema(
                     type: String,
                     enum: ["pdf", "image", "doc", "video", "other"],
                 },
+                publicId: String,
             },
         ],
 

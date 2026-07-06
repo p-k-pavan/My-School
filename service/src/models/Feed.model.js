@@ -26,6 +26,7 @@ const feedPostSchema = new mongoose.Schema(
                 },
                 fileSize: Number,
                 mimeType: String,
+                publicId: String,
             }],
             default: [],
             validate: {

@@ -8,6 +8,7 @@ import AppError from "../utils/AppError.js";
 import asyncHandler from "../middleware/asyncHandler.js";
 import { Notification } from "../models/notification.model.js";
 import { sendPushNotificationsAsync } from "../utils/fcm.js";
+import { uploadToCloudinary, deleteFromCloudinary } from "../utils/cloudinary.js";
 
 const getFileType = (mimeType = "") => {
     if (!mimeType) return "other";
@@ -237,14 +238,20 @@ export const createFeedPost = asyncHandler(async (req, res) => {
         throw new AppError("Maximum upload size is 50MB", 400);
     }
 
-    const attachments =
-        req.files?.map((file) => ({
-            fileName: file.originalname,
-            fileUrl: file.path.replace(/\\/g, "/"),
-            fileType: getFileType(file.mimetype),
-            mimeType: file.mimetype,
-            fileSize: file.size,
-        })) || [];
+    const uploadPromises =
+        req.files?.map(async (file) => {
+            const uploadResult = await uploadToCloudinary(file.path, "feed_attachments");
+            return {
+                fileName: file.originalname,
+                fileUrl: uploadResult.secure_url,
+                fileType: getFileType(file.mimetype),
+                mimeType: file.mimetype,
+                fileSize: file.size,
+                publicId: uploadResult.public_id,
+            };
+        }) || [];
+
+    const attachments = await Promise.all(uploadPromises);
 
     const feed = await FeedPost.create({
         title,
@@ -532,19 +539,34 @@ export const updateFeedPost = asyncHandler(async (req, res) => {
     }
 
     if (removedAttachments.length > 0) {
+        const attachmentsToDelete = feed.attachments.filter(
+            item => removedAttachments.includes(item.fileUrl)
+        );
+        for (const attachment of attachmentsToDelete) {
+            if (attachment.publicId) {
+                const resourceType = attachment.fileType === "image" ? "image" : (attachment.fileType === "video" ? "video" : "raw");
+                await deleteFromCloudinary(attachment.publicId, resourceType);
+            }
+        }
         feed.attachments = feed.attachments.filter(
             item => !removedAttachments.includes(item.fileUrl)
         );
     }
 
-    const newAttachments =
-        req.files?.map(file => ({
-            fileName: file.originalname,
-            fileUrl: file.path.replace(/\\/g, "/"),
-            fileType: getFileType(file.mimetype),
-            mimeType: file.mimetype,
-            fileSize: file.size,
-        })) || [];
+    const newAttachmentsPromises =
+        req.files?.map(async (file) => {
+            const uploadResult = await uploadToCloudinary(file.path, "feed_attachments");
+            return {
+                fileName: file.originalname,
+                fileUrl: uploadResult.secure_url,
+                fileType: getFileType(file.mimetype),
+                mimeType: file.mimetype,
+                fileSize: file.size,
+                publicId: uploadResult.public_id,
+            };
+        }) || [];
+
+    const newAttachments = await Promise.all(newAttachmentsPromises);
 
     feed.attachments.push(...newAttachments);
 
@@ -575,6 +597,15 @@ export const deleteFeedPost = asyncHandler(async (req, res) => {
     const feed = await FeedPost.findById(feedId);
     if (!feed) {
         throw new AppError("Feed not found", 404);
+    }
+
+    if (feed.attachments && feed.attachments.length > 0) {
+        for (const attachment of feed.attachments) {
+            if (attachment.publicId) {
+                const resourceType = attachment.fileType === "image" ? "image" : (attachment.fileType === "video" ? "video" : "raw");
+                await deleteFromCloudinary(attachment.publicId, resourceType);
+            }
+        }
     }
 
     await feed.deleteOne();
