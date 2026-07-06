@@ -17,7 +17,7 @@ import ClassGrid from "@/components/classes/ClassGrid";
 import ClassTable from "@/components/classes/ClassTable";
 import ClassDialog from "@/components/classes/ClassDialog";
 import BulkUploadDialog from "@/components/classes/BulkUpload";
-import DeleteConfirmDialog from "@/components/classes/DeleteConfirmDialog";
+import DeleteConfirmDialog from "@/components/shared/DeleteConfirmDialog";
 
 export default function Classes() {
     const [viewMode, setViewMode] = useState("grid");
@@ -169,7 +169,20 @@ export default function Classes() {
                 open={deleteConfirmOpen}
                 onClose={() => setDeleteConfirmOpen(false)}
                 onConfirm={handleDeleteConfirm}
-                classItem={classToDelete}
+                title="Confirm Deletion"
+                itemName={classToDelete ? `Class ${classToDelete.className}-${classToDelete.section}` : ""}
+                description={
+                    classToDelete ? (
+                        <>
+                            Are you sure you want to delete{" "}
+                            <strong>
+                                Class {classToDelete?.className}-{classToDelete?.section}
+                            </strong>
+                            ? This action cannot be undone and will delete all associated schedules and records.
+                        </>
+                    ) : null
+                }
+                confirmText="Delete Class"
                 isDeleting={isDeleting}
             />
         </div>

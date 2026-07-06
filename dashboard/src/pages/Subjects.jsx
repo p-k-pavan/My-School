@@ -11,7 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import SubjectStats from "@/components/subjects/SubjectStats";
 import SubjectControls from "@/components/subjects/SubjectControls";
 import SubjectDialog from "@/components/subjects/SubjectDialog";
-import DeleteConfirmDialog from "@/components/subjects/DeleteConfirmDialog";
+import DeleteConfirmDialog from "@/components/shared/DeleteConfirmDialog";
 
 import {
     useGetSubjectsQuery,
@@ -205,7 +205,20 @@ export default function Subjects() {
                 open={openDeleteDialog}
                 onClose={() => setOpenDeleteDialog(false)}
                 onConfirm={handleDeleteConfirm}
-                subjectItem={subjectToDelete}
+                title="Delete Subject"
+                itemName={subjectToDelete ? `${subjectToDelete.subjectName} (${subjectToDelete.subjectCode})` : ""}
+                description={
+                    subjectToDelete ? (
+                        <>
+                            Are you absolutely sure you want to delete the subject{" "}
+                            <span className="font-extrabold text-foreground bg-muted/80 px-1.5 py-0.5 rounded border border-border">
+                                {subjectToDelete?.subjectName} ({subjectToDelete?.subjectCode})
+                            </span>
+                            ? All curriculum data associated with this subject code will be removed. This action cannot be undone.
+                        </>
+                    ) : null
+                }
+                confirmText="Delete Permanently"
                 isDeleting={isDeleting}
             />
         </div>

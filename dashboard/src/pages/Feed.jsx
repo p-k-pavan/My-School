@@ -18,7 +18,7 @@ import {
 import FeedStats from "@/components/feed/FeedStats";
 import FeedCard from "@/components/feed/FeedCard";
 import FeedDialog from "@/components/feed/FeedDialog";
-import DeleteConfirmDialog from "@/components/feed/DeleteConfirmDialog";
+import DeleteConfirmDialog from "@/components/shared/DeleteConfirmDialog";
 
 export default function Feed() {
     const { user } = useSelector((state) => state.auth);
@@ -274,7 +274,16 @@ export default function Feed() {
                 open={deleteConfirmOpen}
                 onClose={() => setDeleteConfirmOpen(false)}
                 onConfirm={handleDeleteConfirm}
-                feedItem={feedToDelete}
+                title="Delete Announcement"
+                itemName={feedToDelete ? `"${feedToDelete.title}"` : ""}
+                description={
+                    feedToDelete ? (
+                        <>
+                            Are you sure you want to delete <span className="font-semibold text-foreground">"{feedToDelete?.title}"</span>? This action is permanent and cannot be undone. All attachments and view count data associated with this announcement will be permanently removed.
+                        </>
+                    ) : null
+                }
+                confirmText="Delete Permanently"
                 isDeleting={isDeleting}
             />
         </div>

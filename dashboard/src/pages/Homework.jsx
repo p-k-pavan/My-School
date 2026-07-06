@@ -11,7 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import HomeworkStats from "@/components/homework/HomeworkStats";
 import HomeworkControls from "@/components/homework/HomeworkControls";
 import HomeworkDialog from "@/components/homework/HomeworkDialog";
-import DeleteConfirmDialog from "@/components/homework/DeleteConfirmDialog";
+import DeleteConfirmDialog from "@/components/shared/DeleteConfirmDialog";
 
 import { useGetClassQuery } from "@/redux/api/class";
 import {
@@ -344,7 +344,20 @@ export default function Homework() {
                 open={openDeleteDialog}
                 onClose={() => setOpenDeleteDialog(false)}
                 onConfirm={handleDeleteConfirm}
-                homeworkItem={homeworkToDelete}
+                title="Delete Homework"
+                itemName={homeworkToDelete?.title}
+                description={
+                    homeworkToDelete ? (
+                        <>
+                            Are you absolutely sure you want to delete the homework assignment{" "}
+                            <span className="font-extrabold text-foreground bg-muted/80 px-1.5 py-0.5 rounded border border-border">
+                                {homeworkToDelete?.title}
+                            </span>
+                            ? All data associated with this homework assignment will be permanently removed. This action cannot be undone.
+                        </>
+                    ) : null
+                }
+                confirmText="Delete Permanently"
                 isDeleting={isDeleting}
             />
         </div>

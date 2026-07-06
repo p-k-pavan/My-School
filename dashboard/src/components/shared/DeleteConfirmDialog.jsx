@@ -10,7 +10,16 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 
-export default function DeleteConfirmDialog({ open, onClose, onConfirm, subjectItem, isDeleting }) {
+export default function DeleteConfirmDialog({
+    open,
+    onClose,
+    onConfirm,
+    title = "Confirm Deletion",
+    itemName,
+    description,
+    isDeleting,
+    confirmText = "Delete"
+}) {
     return (
         <Dialog open={open} onOpenChange={onClose}>
             <DialogContent className="sm:max-w-md p-6">
@@ -19,14 +28,20 @@ export default function DeleteConfirmDialog({ open, onClose, onConfirm, subjectI
                         <div className="p-1.5 bg-destructive/10 rounded-md border border-destructive/20">
                             <AlertTriangle className="h-5 w-5 text-destructive" />
                         </div>
-                        Delete Subject
+                        {title}
                     </DialogTitle>
                     <DialogDescription className="text-sm leading-relaxed text-muted-foreground pt-1">
-                        Are you absolutely sure you want to delete the subject{" "}
-                        <span className="font-extrabold text-foreground bg-muted/80 px-1.5 py-0.5 rounded border border-border">
-                            {subjectItem?.subjectName} ({subjectItem?.subjectCode})
-                        </span>
-                        ? All curriculum data associated with this subject code will be removed. This action cannot be undone.
+                        {description ? description : (
+                            <>
+                                Are you absolutely sure you want to delete{" "}
+                                {itemName && (
+                                    <span className="font-extrabold text-foreground bg-muted/80 px-1.5 py-0.5 rounded border border-border">
+                                        {itemName}
+                                    </span>
+                                )}
+                                ? This action cannot be undone.
+                            </>
+                        )}
                     </DialogDescription>
                 </DialogHeader>
                 <DialogFooter className="flex items-center justify-end gap-3 pt-6 border-t border-border mt-2">
@@ -50,7 +65,7 @@ export default function DeleteConfirmDialog({ open, onClose, onConfirm, subjectI
                                 Deleting...
                             </>
                         ) : (
-                            "Delete Permanently"
+                            confirmText
                         )}
                     </Button>
                 </DialogFooter>
