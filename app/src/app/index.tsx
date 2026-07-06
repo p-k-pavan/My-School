@@ -13,7 +13,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Redirect } from "expo-router";
+import { Redirect, router } from "expo-router";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { login as loginAction } from "@/redux/reducer/authReducer";
 import { useLoginMutation } from "@/redux/api/auth";
@@ -161,7 +161,7 @@ export default function HomeScreen() {
 
 
           <View className="items-end mt-3 mb-6">
-            <Pressable>
+            <Pressable onPress={() => router.push("/forgot-password" as any)}>
               <Text className="text-[13px] font-bold text-blue-600">Forgot Password?</Text>
             </Pressable>
           </View>
