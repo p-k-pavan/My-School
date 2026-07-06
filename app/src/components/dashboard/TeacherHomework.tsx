@@ -4,6 +4,7 @@ import { useGetHomeworkByTeacherQuery } from "@/redux/api/homework";
 import { FontAwesome6, Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import AttachmentViewer from "../shared/AttachmentViewer";
+import Skeleton from "../shared/Skeleton";
 
 interface TeacherHomeworkProps {
   assignedDate?: string;
@@ -49,9 +50,33 @@ export default function TeacherHomework({ assignedDate }: TeacherHomeworkProps) 
 
   if (isLoading) {
     return (
-      <View className="bg-white rounded-xl p-5 border border-slate-100 items-center justify-center mb-3">
-        <ActivityIndicator size="small" color="#1E88E5" />
-      </View>
+      <>
+        <View className="flex-row justify-between items-center mt-2 mb-3">
+          <Skeleton width={150} height={16} />
+          <Skeleton width={50} height={16} />
+        </View>
+        {[1, 2].map((key) => (
+          <View
+            key={key}
+            className="bg-white rounded-xl p-4 mb-3 border border-slate-100"
+          >
+            <View className="flex-row justify-between items-start mb-3">
+              <View className="flex-row items-center gap-2 flex-1">
+                <Skeleton width={36} height={36} borderRadius={8} />
+                <View className="flex-1 gap-1.5">
+                  <Skeleton width="40%" height={11} />
+                  <Skeleton width="70%" height={14} />
+                </View>
+              </View>
+              <Skeleton width={80} height={20} borderRadius={12} />
+            </View>
+            <View className="mt-1 mb-3 gap-1.5">
+              <Skeleton width="90%" height={11} />
+              <Skeleton width="80%" height={11} />
+            </View>
+          </View>
+        ))}
+      </>
     );
   }
 

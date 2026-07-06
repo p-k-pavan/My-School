@@ -1,6 +1,7 @@
 import React from "react";
 import { Text, View, TouchableOpacity } from "react-native";
 import { router } from "expo-router";
+import Skeleton from "../shared/Skeleton";
 
 interface Period {
   periodNo: number;
@@ -24,6 +25,7 @@ interface TimetableDay {
 
 interface TodayScheduleProps {
   timetable?: TimetableDay[];
+  isLoading?: boolean;
 }
 
 const parseTime = (timeStr: string) => {
@@ -85,7 +87,7 @@ const getTimelineColors = (status: string) => {
   }
 };
 
-export default function TodaySchedule({ timetable }: TodayScheduleProps) {
+export default function TodaySchedule({ timetable, isLoading }: TodayScheduleProps) {
   const daysOfWeek = [
     "Sunday",
     "Monday",
@@ -96,6 +98,37 @@ export default function TodaySchedule({ timetable }: TodayScheduleProps) {
     "Saturday",
   ];
   const todayName = daysOfWeek[new Date().getDay()];
+
+  if (isLoading) {
+    return (
+      <>
+        <View className="flex-row justify-between items-center mb-3">
+          <Skeleton width={180} height={15} />
+          <Skeleton width={50} height={15} />
+        </View>
+        {[1, 2].map((key) => (
+          <View
+            key={key}
+            className="bg-white rounded-xl px-4 py-3.5 mb-2 border border-slate-100 flex-row items-center gap-3"
+          >
+            <View className="w-20 gap-1.5">
+              <Skeleton width="80%" height={13} />
+              <Skeleton width="60%" height={11} />
+            </View>
+            <View className="items-center gap-0.5">
+              <Skeleton width={10} height={10} borderRadius={5} />
+              {key < 2 && <Skeleton width={2} height={24} />}
+            </View>
+            <View className="flex-1 gap-1.5">
+              <Skeleton width="60%" height={14} />
+              <Skeleton width="80%" height={11} />
+              <Skeleton width="30%" height={16} borderRadius={8} />
+            </View>
+          </View>
+        ))}
+      </>
+    );
+  }
 
   const todayTimetable = Array.isArray(timetable)
     ? timetable.find((t) => t.day.toLowerCase() === todayName.toLowerCase())

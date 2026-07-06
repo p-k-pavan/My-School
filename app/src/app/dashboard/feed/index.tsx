@@ -17,6 +17,7 @@ import { useGetAllFeedPostQuery, useGetFeedPostByIdQuery } from "@/redux/api/fee
 import { Ionicons } from "@expo/vector-icons";
 import { Redirect } from "expo-router";
 import FeedMedia from "@/components/feed/FeedMedia";
+import Skeleton from "@/components/shared/Skeleton";
 
 const { width } = Dimensions.get("window");
 
@@ -128,12 +129,36 @@ export default function Feed() {
         </View>
       </View>
 
-      {/* Main List */}
       {isLoading ? (
-        <View className="flex-1 items-center justify-center bg-slate-50">
-          <ActivityIndicator size="large" color="#1E88E5" />
-          <Text className="text-slate-500 text-sm font-semibold mt-3">Loading feed posts...</Text>
-        </View>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 32 }}
+        >
+          {[1, 2].map((key) => (
+            <View
+              key={key}
+              className="bg-white rounded-2xl border border-slate-100 p-4 mb-4 shadow-sm overflow-hidden"
+            >
+              <View className="flex-row items-center justify-between mb-4">
+                <View className="flex-row items-center gap-2.5 flex-1">
+                  <Skeleton width={32} height={32} borderRadius={16} />
+                  <View className="flex-1 gap-1.5">
+                    <Skeleton width="40%" height={10} />
+                    <Skeleton width="25%" height={8} />
+                  </View>
+                </View>
+                <Skeleton width={50} height={10} />
+              </View>
+              <View className="gap-2 mb-3">
+                <Skeleton width="60%" height={14} />
+                <Skeleton width="95%" height={11} />
+                <Skeleton width="90%" height={11} />
+                <Skeleton width="70%" height={11} />
+              </View>
+              <Skeleton width="100%" height={160} borderRadius={12} />
+            </View>
+          ))}
+        </ScrollView>
       ) : sortedFeeds.length === 0 ? (
         <ScrollView
           contentContainerStyle={{ flexGrow: 1, justifyContent: "center", alignItems: "center" }}

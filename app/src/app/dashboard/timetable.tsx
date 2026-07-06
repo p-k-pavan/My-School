@@ -7,6 +7,7 @@ import { useGetTimetableByClassQuery, useGetTimetableByTeacherQuery } from "@/re
 import { useGetTeacherByUserIdQuery } from "@/redux/api/teacher";
 import { Ionicons } from "@expo/vector-icons";
 import { router, Redirect } from "expo-router";
+import Skeleton from "@/components/shared/Skeleton";
 
 const DAYS_OF_WEEK = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
@@ -198,9 +199,28 @@ export default function TimetableDetail() {
       </View>
 
       {isLoading ? (
-        <View className="flex-1 justify-center items-center">
-          <ActivityIndicator size="large" color="#1E88E5" />
-        </View>
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 12 }}>
+          {[1, 2, 3, 4].map((key) => (
+            <View
+              key={key}
+              className="bg-white rounded-xl px-4 py-3.5 mb-2 border border-slate-100 flex-row items-center gap-3"
+            >
+              <View className="w-20 gap-1.5">
+                <Skeleton width="85%" height={14} />
+                <Skeleton width="60%" height={12} />
+              </View>
+              <View className="items-center gap-0.5">
+                <Skeleton width={10} height={10} borderRadius={5} />
+                {key < 4 && <Skeleton width={2} height={24} />}
+              </View>
+              <View className="flex-1 gap-1.5">
+                <Skeleton width="60%" height={15} />
+                <Skeleton width="80%" height={12} />
+                <Skeleton width="30%" height={16} borderRadius={8} />
+              </View>
+            </View>
+          ))}
+        </ScrollView>
       ) : sortedPeriods.length === 0 ? (
         <View className="flex-1 justify-center items-center p-6">
           <Ionicons name="calendar-outline" size={48} color="#94a3b8" />

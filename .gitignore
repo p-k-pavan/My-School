@@ -28,6 +28,7 @@ app/npm-debug.*
 app/yarn-debug.*
 app/yarn-error.*
 app/android/app/google-services.json
+app/google-services.json
 
 # macOS
 app/.DS_Store

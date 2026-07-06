@@ -3,6 +3,7 @@ import { Text, View, TouchableOpacity } from "react-native";
 import { FontAwesome6, Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import AttachmentViewer from "../shared/AttachmentViewer";
+import Skeleton from "../shared/Skeleton";
 
 interface Attachment {
   fileName: string;
@@ -32,6 +33,7 @@ interface HomeworkItem {
 
 interface HomeworkProps {
   homework?: HomeworkItem[];
+  isLoading?: boolean;
 }
 
 const SUBJECT_STYLING: Record<string, { bg: string; color: string; icon: string }> = {
@@ -74,7 +76,39 @@ const formatDate = (dateStr: string) => {
   }
 };
 
-export default function Homework({ homework }: HomeworkProps) {
+export default function Homework({ homework, isLoading }: HomeworkProps) {
+  if (isLoading) {
+    return (
+      <>
+        <View className="flex-row justify-between items-center mt-2 mb-3">
+          <Skeleton width={150} height={16} />
+          <Skeleton width={50} height={16} />
+        </View>
+        {[1, 2].map((key) => (
+          <View
+            key={key}
+            className="bg-white rounded-xl p-4 mb-3 border border-slate-100"
+          >
+            <View className="flex-row justify-between items-start mb-3">
+              <View className="flex-row items-center gap-2 flex-1">
+                <Skeleton width={36} height={36} borderRadius={8} />
+                <View className="flex-1 gap-1.5">
+                  <Skeleton width="40%" height={11} />
+                  <Skeleton width="70%" height={14} />
+                </View>
+              </View>
+              <Skeleton width={80} height={20} borderRadius={12} />
+            </View>
+            <View className="mt-1 mb-3 gap-1.5">
+              <Skeleton width="90%" height={11} />
+              <Skeleton width="80%" height={11} />
+            </View>
+          </View>
+        ))}
+      </>
+    );
+  }
+
   if (!homework || homework.length === 0) {
     return (
       <>

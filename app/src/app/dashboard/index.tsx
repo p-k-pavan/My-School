@@ -29,7 +29,7 @@ export default function Dashboard() {
   const isTeacher = (user as any)?.role === "teacher";
   const parentId = isParent ? String((user as any).id) : undefined;
   
-  const { data: parentData } = useGetParentsByUserIdQuery(parentId as string | undefined, { skip: !isParent || !parentId });
+  const { data: parentData, isLoading: isParentLoading } = useGetParentsByUserIdQuery(parentId as string | undefined, { skip: !isParent || !parentId });
 
   const selectedStudentId = useAppSelector((state) => state.auth.selectedStudentId);
   const studentIds = parentData?.parent?.studentIds || [];
@@ -40,12 +40,12 @@ export default function Dashboard() {
     : "Class 10A  •  Roll No: 123";
 
   const classId = student?.classId?._id;
-  const { data: tt } = useGetTimetableByClassQuery(
+  const { data: tt, isLoading: isTimetableLoading } = useGetTimetableByClassQuery(
     { classId, academicYear },
     { skip: !classId || isTeacher }
   );
 
-  const { data: hwData } = useGetHomeworkByClassQuery(
+  const { data: hwData, isLoading: isHomeworkLoading } = useGetHomeworkByClassQuery(
     { classId, assigned: assignedDate },
     { skip: !classId || isTeacher }
   );
@@ -90,9 +90,9 @@ export default function Dashboard() {
             <>
               <Overview />
 
-              <TodaySchedule timetable={timetable} />
+              <TodaySchedule timetable={timetable} isLoading={isTimetableLoading || isParentLoading} />
 
-              <Homework homework={homework} />
+              <Homework homework={homework} isLoading={isHomeworkLoading || isParentLoading} />
             </>
           )}
 

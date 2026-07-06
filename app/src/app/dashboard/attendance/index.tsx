@@ -13,6 +13,7 @@ import MonthSelector from "@/components/attendance/MonthSelector";
 import AttendanceStats from "@/components/attendance/AttendanceStats";
 import AttendanceCalendar from "@/components/attendance/AttendanceCalendar";
 import AttendanceLogs from "@/components/attendance/AttendanceLogs";
+import Skeleton from "@/components/shared/Skeleton";
 
 const getLocalDateString = (date: Date) => {
     const year = date.getFullYear();
@@ -184,13 +185,7 @@ export default function Attendance() {
     const selectedCell = calendarCells.find(c => c.dateStr === selectedDateStr);
     const selectedDayOfWeek = selectedCell?.dayOfWeek ?? null;
 
-    if (isLoading && records.length === 0) {
-        return (
-            <SafeAreaView className="flex-1 bg-slate-100 items-center justify-center">
-                <ActivityIndicator size="large" color="#1E88E5" />
-            </SafeAreaView>
-        );
-    }
+
 
     return (
         <SafeAreaView className="flex-1 bg-slate-100" edges={["top", "left", "right"]}>
@@ -213,15 +208,29 @@ export default function Attendance() {
                         onNextMonth={handleNextMonth}
                     />
 
-                    <AttendanceStats
-                        attendancePercentage={attendancePercentage}
-                        totalMarkedDays={totalMarkedDays}
-                        presentCount={presentCount}
-                        absentCount={absentCount}
-                        lateCount={lateCount}
-                        halfDayCount={halfDayCount}
-                        holidayCount={holidayCount}
-                    />
+                    {isLoading ? (
+                        <View className="bg-white rounded-2xl p-4 mt-4 border border-slate-100 flex-row justify-between items-center">
+                            <View className="gap-2 flex-1">
+                                <Skeleton width="40%" height={12} />
+                                <Skeleton width="70%" height={24} />
+                            </View>
+                            <View className="flex-row gap-2">
+                                <Skeleton width={44} height={40} borderRadius={8} />
+                                <Skeleton width={44} height={40} borderRadius={8} />
+                                <Skeleton width={44} height={40} borderRadius={8} />
+                            </View>
+                        </View>
+                    ) : (
+                        <AttendanceStats
+                            attendancePercentage={attendancePercentage}
+                            totalMarkedDays={totalMarkedDays}
+                            presentCount={presentCount}
+                            absentCount={absentCount}
+                            lateCount={lateCount}
+                            halfDayCount={halfDayCount}
+                            holidayCount={holidayCount}
+                        />
+                    )}
 
                     <View className="flex-row bg-slate-200/80 rounded-xl p-1 mt-4">
                         <TouchableOpacity
@@ -267,7 +276,19 @@ export default function Attendance() {
                         </TouchableOpacity>
                     </View>
 
-                    {activeTab === "calendar" ? (
+                    {isLoading ? (
+                        <View className="bg-white rounded-xl p-4 mt-4 border border-slate-100 gap-4">
+                            <View className="flex-row justify-between">
+                                <Skeleton width={120} height={14} />
+                                <Skeleton width={85} height={14} />
+                            </View>
+                            <View className="flex-row flex-wrap gap-2.5 justify-between">
+                                {Array.from({ length: 28 }).map((_, idx) => (
+                                    <Skeleton key={idx} width="12%" height={32} borderRadius={6} />
+                                ))}
+                            </View>
+                        </View>
+                    ) : activeTab === "calendar" ? (
                         <AttendanceCalendar
                             calendarCells={calendarCells}
                             recordsMap={recordsMap}

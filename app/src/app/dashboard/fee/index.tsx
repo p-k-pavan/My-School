@@ -22,6 +22,7 @@ import { useAppSelector } from "@/redux/hooks";
 import { Redirect } from "expo-router";
 import { useGetParentsByUserIdQuery } from "@/redux/api/parent";
 import { useGetFeesByStudentIdQuery } from "@/redux/api/fees";
+import Skeleton from "@/components/shared/Skeleton";
 
 const formatINR = (amount: number) =>
     new Intl.NumberFormat("en-IN").format(amount ?? 0);
@@ -100,13 +101,7 @@ export default function Fees() {
     const rollNo = student?.rollNo ?? "-";
 
 
-    if (isLoading) {
-        return (
-            <SafeAreaView className="flex-1 bg-slate-100 items-center justify-center">
-                <ActivityIndicator size="large" color="#1E88E5" />
-            </SafeAreaView>
-        );
-    }
+
 
 
     return (
@@ -158,81 +153,106 @@ export default function Fees() {
 
                 <View className="px-3">
 
-                    <View
-                        className="bg-white rounded-2xl p-3.5 border border-blue-100 my-4"
-                        style={{
-                            shadowColor: "#1E88E5",
-                            shadowOffset: { width: 0, height: 2 },
-                            shadowOpacity: 0.08,
-                            shadowRadius: 8,
-                            elevation: 3,
-                        }}
-                    >
-                        <View className="flex-row justify-between items-center">
-                            <View className="w-32 h-32 px-4 rounded-xl items-center justify-center shrink-0">
-                                <Image
-                                    source={require("@/assets/images/wallet.png")}
-                                    style={{ width: 64, height: 64 }}
-                                    resizeMode="contain"
-                                />
+                    {isLoading ? (
+                        <View className="bg-white rounded-2xl p-4 border border-blue-100 my-4 flex-row gap-3 items-center">
+                            <Skeleton width={64} height={64} borderRadius={12} />
+                            <View className="flex-1 gap-2">
+                                <Skeleton width="40%" height={12} />
+                                <Skeleton width="80%" height={24} />
                             </View>
-                            <View className="flex-1">
-                                <Text className="text-[14px] text-slate-500 mt-1 font-medium">
-                                    Total Fees {fees?.academicYear ?? "-"}
-                                </Text>
-                                <View className="flex-row items-center justify-between mt-1 pr-4">
-                                    <Text className="text-[22px] font-bold text-blue-900">
-                                        ₹ {formatINR(fees?.totalFee)}
-                                    </Text>
-                                    <Pressable 
-                                        onPress={() => setIsModalOpen(true)}
-                                        className="bg-[#1E88E5] px-3 py-1.5 rounded-lg active:opacity-80"
-                                    >
-                                        <Text className="text-white text-[11px] font-semibold">
-                                            View
-                                        </Text>
-                                    </Pressable>
+                        </View>
+                    ) : (
+                        <View
+                            className="bg-white rounded-2xl p-3.5 border border-blue-100 my-4"
+                            style={{
+                                shadowColor: "#1E88E5",
+                                shadowOffset: { width: 0, height: 2 },
+                                shadowOpacity: 0.08,
+                                shadowRadius: 8,
+                                elevation: 3,
+                            }}
+                        >
+                            <View className="flex-row justify-between items-center">
+                                <View className="w-32 h-32 px-4 rounded-xl items-center justify-center shrink-0">
+                                    <Image
+                                        source={require("@/assets/images/wallet.png")}
+                                        style={{ width: 64, height: 64 }}
+                                        resizeMode="contain"
+                                    />
                                 </View>
-                                {fees?.discountAmount > 0 && (
-                                    <Text className="text-[11px] text-green-600 mt-1">
-                                        Discount applied: ₹ {formatINR(fees.discountAmount)}
+                                <View className="flex-1">
+                                    <Text className="text-[14px] text-slate-500 mt-1 font-medium">
+                                        Total Fees {fees?.academicYear ?? "-"}
                                     </Text>
-                                )}
+                                    <View className="flex-row items-center justify-between mt-1 pr-4">
+                                        <Text className="text-[22px] font-bold text-blue-900">
+                                            ₹ {formatINR(fees?.totalFee)}
+                                        </Text>
+                                        <Pressable 
+                                            onPress={() => setIsModalOpen(true)}
+                                            className="bg-[#1E88E5] px-3 py-1.5 rounded-lg active:opacity-80"
+                                        >
+                                            <Text className="text-white text-[11px] font-semibold">
+                                                View
+                                            </Text>
+                                        </Pressable>
+                                    </View>
+                                    {fees?.discountAmount > 0 && (
+                                        <Text className="text-[11px] text-green-600 mt-1">
+                                            Discount applied: ₹ {formatINR(fees.discountAmount)}
+                                        </Text>
+                                    )}
+                                </View>
                             </View>
                         </View>
-                    </View>
+                    )}
 
-                    <View className="flex-row flex-wrap gap-2 mb-4">
-                        <View
-                            className="bg-white rounded-xl p-3.5 items-center border border-slate-100"
-                            style={{ width: "48.5%" }}
-                        >
-                            <View className="w-16 h-16 bg-green-50 rounded-full items-center justify-center shrink-0 mb-2.5">
-                                <Fontisto name="wallet" size={24} color="green" />
+                    {isLoading ? (
+                        <View className="flex-row flex-wrap gap-2 mb-4">
+                            <View className="bg-white rounded-xl p-4 items-center border border-slate-100 gap-2 flex-1" style={{ width: "48.5%" }}>
+                                <Skeleton width={48} height={48} borderRadius={24} />
+                                <Skeleton width="60%" height={12} />
+                                <Skeleton width="80%" height={22} />
                             </View>
-                            <Text className="text-[12px] text-slate-400 mt-0.5">
-                                Total Paid
-                            </Text>
-                            <Text className="text-[22px] font-bold text-green-600">
-                                ₹ {formatINR(fees?.paidAmount)}
-                            </Text>
+                            <View className="bg-white rounded-xl p-4 items-center border border-slate-100 gap-2 flex-1" style={{ width: "48.5%" }}>
+                                <Skeleton width={48} height={48} borderRadius={24} />
+                                <Skeleton width="60%" height={12} />
+                                <Skeleton width="80%" height={22} />
+                            </View>
                         </View>
+                    ) : (
+                        <View className="flex-row flex-wrap gap-2 mb-4">
+                            <View
+                                className="bg-white rounded-xl p-3.5 items-center border border-slate-100"
+                                style={{ width: "48.5%" }}
+                            >
+                                <View className="w-16 h-16 bg-green-50 rounded-full items-center justify-center shrink-0 mb-2.5">
+                                    <Fontisto name="wallet" size={24} color="green" />
+                                </View>
+                                <Text className="text-[12px] text-slate-400 mt-0.5">
+                                    Total Paid
+                                </Text>
+                                <Text className="text-[22px] font-bold text-green-600">
+                                    ₹ {formatINR(fees?.paidAmount)}
+                                </Text>
+                            </View>
 
-                        <View
-                            className="bg-white rounded-xl p-3.5 border items-center border-slate-100"
-                            style={{ width: "48.5%" }}
-                        >
-                            <View className="w-16 h-16 bg-orange-50 rounded-full items-center justify-center shrink-0 mb-2.5">
-                                <FontAwesome name="calendar" size={24} color="orange" />
+                            <View
+                                className="bg-white rounded-xl p-3.5 border items-center border-slate-100"
+                                style={{ width: "48.5%" }}
+                            >
+                                <View className="w-16 h-16 bg-orange-50 rounded-full items-center justify-center shrink-0 mb-2.5">
+                                    <FontAwesome name="calendar" size={24} color="orange" />
+                                </View>
+                                <Text className="text-[12px] text-slate-400 mt-0.5">
+                                    Due Amount
+                                </Text>
+                                <Text className="text-[22px] font-bold text-orange-400">
+                                    ₹ {formatINR(fees?.dueAmount)}
+                                </Text>
                             </View>
-                            <Text className="text-[12px] text-slate-400 mt-0.5">
-                                Due Amount
-                            </Text>
-                            <Text className="text-[22px] font-bold text-orange-400">
-                                ₹ {formatINR(fees?.dueAmount)}
-                            </Text>
                         </View>
-                    </View>
+                    )}
 
                     {isDue && (
                         <View
@@ -269,45 +289,60 @@ export default function Fees() {
                         </View>
                     )}
 
-                    {transactions
-                        .slice()
-                        .sort(
-                            (a, b) =>
-                                new Date(b.paymentDate).getTime() -
-                                new Date(a.paymentDate).getTime()
-                        )
-                        .map((transaction) => (
-                            <View
-                                key={transaction._id}
-                                className="bg-white rounded-2xl p-3.5 border border-blue-100 my-4"
-                                style={{
-                                    shadowColor: "#1E88E5",
-                                    shadowOffset: { width: 0, height: 2 },
-                                    shadowOpacity: 0.08,
-                                    shadowRadius: 8,
-                                    elevation: 3,
-                                }}
-                            >
-                                <View className="flex-row justify-between items-center">
-                                    <Text className="text-[12px] text-slate-400 mt-0.5">
-                                        Paid on {formatDate(transaction.paymentDate)}
-                                    </Text>
+                    {isLoading ? (
+                        <View className="gap-3">
+                            {[1, 2].map((i) => (
+                                <View key={i} className="bg-white rounded-2xl p-4 border border-blue-50 gap-2">
+                                    <Skeleton width="50%" height={12} />
+                                    <View className="flex-row justify-between items-center mt-1">
+                                        <Skeleton width="40%" height={24} />
+                                        <Skeleton width={80} height={28} borderRadius={8} />
+                                    </View>
+                                    <Skeleton width="80%" height={11} />
                                 </View>
-                                <View className="flex-row items-center justify-between mt-1 pr-4">
-                                    <Text className="text-[22px] font-bold text-blue-900">
-                                        ₹ {formatINR(transaction.amount)}
-                                    </Text>
-                                    <Pressable className="bg-[#1E88E5] px-3 py-1.5 rounded-lg active:opacity-80">
-                                        <Text className="text-white text-[11px] font-semibold">
-                                            View Receipt
+                            ))}
+                        </View>
+                    ) : (
+                        transactions
+                            .slice()
+                            .sort(
+                                (a, b) =>
+                                    new Date(b.paymentDate).getTime() -
+                                    new Date(a.paymentDate).getTime()
+                            )
+                            .map((transaction) => (
+                                <View
+                                    key={transaction._id}
+                                    className="bg-white rounded-2xl p-3.5 border border-blue-100 my-4"
+                                    style={{
+                                        shadowColor: "#1E88E5",
+                                        shadowOffset: { width: 0, height: 2 },
+                                        shadowOpacity: 0.08,
+                                        shadowRadius: 8,
+                                        elevation: 3,
+                                    }}
+                                >
+                                    <View className="flex-row justify-between items-center">
+                                        <Text className="text-[12px] text-slate-400 mt-0.5">
+                                            Paid on {formatDate(transaction.paymentDate)}
                                         </Text>
-                                    </Pressable>
+                                    </View>
+                                    <View className="flex-row items-center justify-between mt-1 pr-4">
+                                        <Text className="text-[22px] font-bold text-blue-900">
+                                            ₹ {formatINR(transaction.amount)}
+                                        </Text>
+                                        <Pressable className="bg-[#1E88E5] px-3 py-1.5 rounded-lg active:opacity-80">
+                                            <Text className="text-white text-[11px] font-semibold">
+                                                View Receipt
+                                            </Text>
+                                        </Pressable>
+                                    </View>
+                                    <Text className="text-[11px] text-slate-400 mt-1">
+                                        Receipt No: {transaction.receiptNo}  •  {(transaction.paymentMethod || "").toUpperCase()}
+                                    </Text>
                                 </View>
-                                <Text className="text-[11px] text-slate-400 mt-1">
-                                    Receipt No: {transaction.receiptNo}  •  {(transaction.paymentMethod || "").toUpperCase()}
-                                </Text>
-                            </View>
-                        ))}
+                            ))
+                    )}
 
                 </View>
             </ScrollView>

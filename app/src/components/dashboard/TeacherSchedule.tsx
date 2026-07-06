@@ -2,6 +2,7 @@ import React from "react";
 import { Text, View, TouchableOpacity, ActivityIndicator } from "react-native";
 import { useGetTimetableByTeacherQuery } from "@/redux/api/timetable";
 import { router } from "expo-router";
+import Skeleton from "../shared/Skeleton";
 
 interface TeacherScheduleProps {
   academicYear?: string;
@@ -123,9 +124,32 @@ export default function TeacherSchedule({ academicYear = "2026-2027" }: TeacherS
 
   if (isLoading) {
     return (
-      <View className="bg-white rounded-xl p-5 border border-slate-100 items-center justify-center my-3">
-        <ActivityIndicator size="small" color="#1E88E5" />
-      </View>
+      <>
+        <View className="flex-row justify-between items-center mt-2 mb-3">
+          <Skeleton width={180} height={15} />
+          <Skeleton width={50} height={15} />
+        </View>
+        {[1, 2].map((key) => (
+          <View
+            key={key}
+            className="bg-white rounded-xl px-4 py-3.5 mb-2 border border-slate-100 flex-row items-center gap-3"
+          >
+            <View className="w-20 gap-1.5">
+              <Skeleton width="80%" height={13} />
+              <Skeleton width="60%" height={11} />
+            </View>
+            <View className="items-center gap-0.5">
+              <Skeleton width={10} height={10} borderRadius={5} />
+              {key < 2 && <Skeleton width={2} height={24} />}
+            </View>
+            <View className="flex-1 gap-1.5">
+              <Skeleton width="65%" height={14} />
+              <Skeleton width="80%" height={11} />
+              <Skeleton width="30%" height={16} borderRadius={8} />
+            </View>
+          </View>
+        ))}
+      </>
     );
   }
 

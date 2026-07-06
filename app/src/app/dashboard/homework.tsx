@@ -8,6 +8,7 @@ import { useGetTeacherByUserIdQuery } from "@/redux/api/teacher";
 import { Ionicons, FontAwesome6 } from "@expo/vector-icons";
 import { router, Redirect } from "expo-router";
 import AttachmentViewer from "@/components/shared/AttachmentViewer";
+import Skeleton from "@/components/shared/Skeleton";
 
 const SUBJECT_STYLING: Record<string, { bg: string; color: string; icon: string }> = {
   KANNADA: { bg: "bg-amber-50", color: "#D97706", icon: "book-open" },
@@ -162,9 +163,35 @@ export default function AllHomework() {
       </View>
 
       {isLoading ? (
-        <View className="flex-1 justify-center items-center">
-          <ActivityIndicator size="large" color="#1E88E5" />
-        </View>
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 12 }}>
+          {[1, 2, 3].map((key) => (
+            <View
+              key={key}
+              className="bg-white rounded-xl p-4 mb-3 border border-slate-100"
+            >
+              <View className="flex-row justify-between items-start mb-3">
+                <View className="flex-row items-center gap-2 flex-1">
+                  <Skeleton width={36} height={36} borderRadius={8} />
+                  <View className="flex-1 gap-1.5">
+                    <Skeleton width="40%" height={12} />
+                    <Skeleton width="70%" height={15} />
+                  </View>
+                </View>
+                <Skeleton width={80} height={20} borderRadius={12} />
+              </View>
+              <View className="mt-1 mb-3 gap-1.5">
+                <Skeleton width="90%" height={12} />
+                <Skeleton width="80%" height={12} />
+              </View>
+              <View className="flex-row justify-between items-center pt-3 border-t border-slate-50">
+                <View className="flex-row items-center gap-1.5">
+                  <Skeleton width={12} height={12} borderRadius={6} />
+                  <Skeleton width={100} height={10} />
+                </View>
+              </View>
+            </View>
+          ))}
+        </ScrollView>
       ) : !homework || homework.length === 0 ? (
         <View className="flex-1 justify-center items-center p-6">
           <Ionicons name="document-text-outline" size={48} color="#94a3b8" />

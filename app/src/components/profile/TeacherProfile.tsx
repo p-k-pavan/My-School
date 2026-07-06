@@ -7,6 +7,7 @@ import { logout } from "@/redux/reducer/authReducer";
 import { useLogoutMutation, useDeactivateDeviceTokenMutation } from "@/redux/api/auth";
 import { router } from "expo-router";
 import { getOrCreateDeviceId, clearSyncedTokenInfo } from "@/services/PushNotifications";
+import Skeleton from "../shared/Skeleton";
 
 interface TeacherProfileProps {
   userId: string;
@@ -68,9 +69,35 @@ export default function TeacherProfile({ userId }: TeacherProfileProps) {
 
   if (isLoading) {
     return (
-      <View className="flex-1 justify-center items-center">
-        <ActivityIndicator size="large" color="#1E88E5" />
-      </View>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 16 }}>
+        {/* Header */}
+        <View className="flex-row items-center justify-between px-4 py-3 bg-white border-b border-slate-200">
+          <Text className="text-[18px] font-bold text-blue-900">Profile</Text>
+          <Skeleton width={22} height={22} borderRadius={11} />
+        </View>
+
+        <View className="px-3 mt-4 gap-4">
+          {/* Profile Card Skeleton */}
+          <View className="bg-white rounded-2xl border border-blue-100 p-4 flex-row items-center gap-4">
+            <Skeleton width={80} height={80} borderRadius={40} />
+            <View className="flex-1 gap-2">
+              <Skeleton width="60%" height={16} />
+              <Skeleton width="40%" height={12} />
+            </View>
+          </View>
+
+          {/* Details rows skeletons */}
+          <View className="bg-white rounded-2xl border border-slate-100 p-4 gap-4">
+            <Skeleton width={150} height={14} />
+            {[1, 2, 3, 4, 5].map((i) => (
+              <View key={i} className="flex-row justify-between items-center py-1">
+                <Skeleton width="30%" height={12} />
+                <Skeleton width="50%" height={12} />
+              </View>
+            ))}
+          </View>
+        </View>
+      </ScrollView>
     );
   }
 

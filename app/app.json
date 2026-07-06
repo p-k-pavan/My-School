@@ -18,7 +18,8 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.anonymous.myschool"
+      "package": "com.anonymous.myschool",
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "output": "static",
@@ -38,11 +39,16 @@
       ],
       "expo-video",
       "expo-sharing",
+      "@react-native-firebase/app",
+      "@react-native-firebase/messaging",
       [
         "expo-build-properties",
         {
           "android": {
-            "usesCleartextTraffic": true
+            "usesCleartextTraffic": true,
+            "extraMavenRepos": [
+              "$rootDir/../node_modules/@notifee/react-native/android/libs"
+            ]
           }
         }
       ]
