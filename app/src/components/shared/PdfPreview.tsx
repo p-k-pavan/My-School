@@ -16,18 +16,26 @@ interface PdfPreviewProps {
   fileUrl: string;
   fileName?: string;
   fileSize?: number;
+  visible?: boolean;
+  onRequestClose?: () => void;
 }
 
 const PdfPreview: React.FC<PdfPreviewProps> = ({
   fileUrl,
   fileName,
   fileSize,
+  visible,
+  onRequestClose,
 }) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [trackWidth, setTrackWidth] = useState(0);
   const pdfRef = useRef<React.ComponentRef<typeof Pdf>>(null);
+
+  const isControlled = visible !== undefined;
+  const showModal = isControlled ? visible : modalVisible;
+  const closeModal = isControlled ? onRequestClose : () => setModalVisible(false);
 
   const source = {
     uri: fileUrl,
@@ -44,6 +52,115 @@ const PdfPreview: React.FC<PdfPreviewProps> = ({
       }
     }
   };
+
+  if (isControlled) {
+    return (
+      <Modal
+        visible={showModal}
+        animationType="slide"
+        onRequestClose={closeModal}
+      >
+        {showModal && (
+          <SafeAreaView style={styles.modalContainer}>
+            {/* Header */}
+            <View style={styles.header}>
+              <TouchableOpacity
+                onPress={closeModal}
+                style={styles.closeButton}
+              >
+                <Ionicons name="arrow-back" size={24} color="#1e293b" />
+              </TouchableOpacity>
+              <Text style={styles.headerTitle} numberOfLines={1}>
+                {fileName || "PDF Viewer"}
+              </Text>
+              <View style={{ width: 40 }} />
+            </View>
+
+            {/* Fullscreen PDF component */}
+            <View style={styles.pdfContainer}>
+              <Pdf
+                ref={pdfRef}
+                source={source}
+                horizontal={true}
+                enablePaging={true}
+                style={styles.pdfFullscreen}
+                trustAllCerts={false}
+                renderActivityIndicator={() => (
+                  <ActivityIndicator size="large" color="#1E88E5" />
+                )}
+                onLoadComplete={(numberOfPages) => {
+                  setTotalPages(numberOfPages);
+                }}
+                onPageChanged={(p) => {
+                  setPage(p);
+                }}
+                onError={(error) => {
+                  console.log("PDF fullscreen error with url:", fileUrl, error);
+                }}
+              />
+            </View>
+
+            {/* Footer controls with page indicator and seek slider */}
+            <View style={styles.footer}>
+              <Text style={styles.pageIndicatorText}>
+                Page {page} of {totalPages}
+              </Text>
+
+              <View style={styles.sliderContainer}>
+                <TouchableOpacity
+                  disabled={page <= 1}
+                  onPress={() => {
+                    if (page > 1) {
+                      pdfRef.current?.setPage(page - 1);
+                    }
+                  }}
+                  style={styles.navButton}
+                >
+                  <Ionicons
+                    name="chevron-back"
+                    size={24}
+                    color={page <= 1 ? "#cbd5e1" : "#1E88E5"}
+                  />
+                </TouchableOpacity>
+
+                <View
+                  style={styles.sliderTrack}
+                  onLayout={(e) => setTrackWidth(e.nativeEvent.layout.width)}
+                  onTouchStart={handleSliderTouch}
+                  onTouchMove={handleSliderTouch}
+                >
+                  <View
+                    style={[
+                      styles.sliderThumb,
+                      {
+                        left: `${totalPages > 1 ? ((page - 1) / (totalPages - 1)) * 100 : 0}%`,
+                      },
+                    ]}
+                  />
+                </View>
+
+                <TouchableOpacity
+                  disabled={page >= totalPages}
+                  onPress={() => {
+                    if (page < totalPages) {
+                      pdfRef.current?.setPage(page + 1);
+                    }
+                  }}
+                  style={styles.navButton}
+                >
+                  <Ionicons
+                    name="chevron-forward"
+                    size={24}
+                    color={page >= totalPages ? "#cbd5e1" : "#1E88E5"}
+                  />
+                </TouchableOpacity>
+              </View>
+            </View>
+          </SafeAreaView>
+        )}
+      </Modal>
+    );
+  }
 
   return (
     <View style={styles.container}>

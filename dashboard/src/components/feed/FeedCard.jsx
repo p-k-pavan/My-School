@@ -188,39 +188,68 @@ export default function FeedCard({ feed, role, currentUserId, onEdit, onDelete, 
                 )}
 
 
-                {feed.attachments && feed.attachments.length > 0 && (
-                    <div className="mt-4 pt-4 border-t border-border space-y-2">
-                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                            Attachments ({feed.attachments.length})
-                        </p>
-                        <div className="grid gap-2 sm:grid-cols-2">
-                            {feed.attachments.map((file, i) => (
-                                <a
-                                    key={i}
-                                    href={getAttachmentUrl(file.fileUrl)}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="flex items-center justify-between p-2 rounded-lg border border-border bg-muted/10 hover:bg-muted/40 transition-all duration-200 group"
-                                >
-                                    <div className="flex items-center gap-2 min-w-0 mr-2">
-                                        <div className="p-1 rounded bg-background border border-border shrink-0">
-                                            {getFileIcon(file.fileType)}
+                {feed.attachments && feed.attachments.length > 0 && (() => {
+                    const media = feed.attachments.filter(f => f.fileType === "image" || f.fileType === "video");
+                    const docs = feed.attachments.filter(f => f.fileType !== "image" && f.fileType !== "video");
+                    return (
+                        <div className="space-y-3.5">
+                            {media.length > 0 && (
+                                <div className="space-y-2">
+                                    {media.map((file, idx) => (
+                                        <div key={idx} className="rounded-lg overflow-hidden border border-border bg-black/5 dark:bg-white/5 max-h-[400px] flex items-center justify-center">
+                                            {file.fileType === "image" ? (
+                                                <img
+                                                    src={getAttachmentUrl(file.fileUrl)}
+                                                    alt={file.fileName}
+                                                    className="max-h-[400px] w-auto object-contain hover:scale-[1.01] transition-transform duration-200"
+                                                />
+                                            ) : (
+                                                <video
+                                                    src={getAttachmentUrl(file.fileUrl)}
+                                                    controls
+                                                    className="max-h-[400px] w-full object-contain"
+                                                />
+                                            )}
                                         </div>
-                                        <div className="min-w-0">
-                                            <p className="text-xs font-semibold text-foreground truncate group-hover:text-primary transition-colors">
-                                                {file.fileName}
-                                            </p>
-                                            <p className="text-[10px] text-muted-foreground font-medium mt-0.5">
-                                                {formatFileSize(file.fileSize)}
-                                            </p>
-                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                            {docs.length > 0 && (
+                                <div className="pt-3 border-t border-border/60 space-y-2">
+                                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                                        Attachments ({docs.length})
+                                    </p>
+                                    <div className="grid gap-2 sm:grid-cols-2">
+                                        {docs.map((file, i) => (
+                                            <a
+                                                key={i}
+                                                href={getAttachmentUrl(file.fileUrl)}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                className="flex items-center justify-between p-2 rounded-lg border border-border bg-muted/10 hover:bg-muted/40 transition-all duration-200 group"
+                                            >
+                                                <div className="flex items-center gap-2 min-w-0 mr-2">
+                                                    <div className="p-1 rounded bg-background border border-border shrink-0">
+                                                        {getFileIcon(file.fileType)}
+                                                    </div>
+                                                    <div className="min-w-0">
+                                                        <p className="text-xs font-semibold text-foreground truncate group-hover:text-primary transition-colors">
+                                                            {file.fileName}
+                                                        </p>
+                                                        <p className="text-[10px] text-muted-foreground font-medium mt-0.5">
+                                                            {formatFileSize(file.fileSize)}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <Download className="h-3.5 w-3.5 text-neutral-400 group-hover:text-primary shrink-0 transition-colors" />
+                                            </a>
+                                        ))}
                                     </div>
-                                    <Download className="h-3.5 w-3.5 text-neutral-400 group-hover:text-primary shrink-0 transition-colors" />
-                                </a>
-                            ))}
+                                </div>
+                            )}
                         </div>
-                    </div>
-                )}
+                    );
+                })()}
             </CardContent>
 
             <CardFooter className="px-5 py-3 bg-muted/20 border-t border-border flex items-center justify-between">

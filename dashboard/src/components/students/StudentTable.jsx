@@ -72,11 +72,11 @@ export default function StudentTable({
                                     <td className="whitespace-nowrap px-6 py-4">
                                         <div className="flex items-center gap-3">
                                             {student.profilePhoto ? (
-                                                <img
-                                                    src={student.profilePhoto}
-                                                    alt={student.studentName}
-                                                    className="h-10 w-10 rounded-full object-cover border border-border shrink-0"
-                                                />
+                                                    <img
+                                                        src={student.profilePhoto.startsWith("http") ? student.profilePhoto : `${import.meta.env.VITE_API_BASE_URL.replace(/\/api\/?$/, "")}/${student.profilePhoto}`}
+                                                        alt={student.studentName}
+                                                        className="h-10 w-10 rounded-full object-cover border border-border shrink-0"
+                                                    />
                                             ) : (
                                                 <div className="h-10 w-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-sm shrink-0">
                                                     {student.studentName ? student.studentName.charAt(0).toUpperCase() : "?"}

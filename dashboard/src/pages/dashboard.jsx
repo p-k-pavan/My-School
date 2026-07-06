@@ -440,7 +440,7 @@ export default function Dashboard() {
                                             <div className="flex items-center gap-3">
                                                 {student.profilePhoto ? (
                                                     <img
-                                                        src={student.profilePhoto.startsWith("http") ? student.profilePhoto : `${import.meta.env.VITE_API_BASE_URL}/${student.profilePhoto}`}
+                                                        src={student.profilePhoto.startsWith("http") ? student.profilePhoto : `${import.meta.env.VITE_API_BASE_URL.replace(/\/api\/?$/, "")}/${student.profilePhoto}`}
                                                         alt={student.studentName}
                                                         className="w-9 h-9 rounded-full object-cover border border-border"
                                                     />

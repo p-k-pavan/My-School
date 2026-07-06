@@ -248,30 +248,59 @@ export default function Homework() {
                                     </div>
 
                                     {/* Attachments Section */}
-                                    {homework.attachments && homework.attachments.length > 0 && (
-                                        <div className="space-y-2">
-                                            <div className="text-xs font-bold text-foreground flex items-center gap-1">
-                                                <FileText className="h-3.5 w-3.5" />
-                                                Attachments ({homework.attachments.length})
+                                    {homework.attachments && homework.attachments.length > 0 && (() => {
+                                        const media = homework.attachments.filter(f => f.fileType === "image" || f.fileType === "video");
+                                        const docs = homework.attachments.filter(f => f.fileType !== "image" && f.fileType !== "video");
+                                        return (
+                                            <div className="space-y-3">
+                                                {media.length > 0 && (
+                                                    <div className="space-y-2">
+                                                        {media.map((file, idx) => (
+                                                            <div key={idx} className="rounded-lg overflow-hidden border border-border bg-black/5 dark:bg-white/5 max-h-[300px] flex items-center justify-center">
+                                                                {file.fileType === "image" ? (
+                                                                    <img
+                                                                        src={getAttachmentUrl(file.fileUrl)}
+                                                                        alt={file.fileName}
+                                                                        className="max-h-[300px] w-auto object-contain"
+                                                                    />
+                                                                ) : (
+                                                                    <video
+                                                                        src={getAttachmentUrl(file.fileUrl)}
+                                                                        controls
+                                                                        className="max-h-[300px] w-full object-contain"
+                                                                    />
+                                                                )}
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                                {docs.length > 0 && (
+                                                    <div className="space-y-2">
+                                                        <div className="text-xs font-bold text-foreground flex items-center gap-1">
+                                                            <FileText className="h-3.5 w-3.5" />
+                                                            Attachments ({docs.length})
+                                                        </div>
+                                                        <div className="grid gap-1.5">
+                                                            {docs.map((file, idx) => (
+                                                                <a
+                                                                    key={idx}
+                                                                    href={getAttachmentUrl(file.fileUrl)}
+                                                                    target="_blank"
+                                                                    rel="noopener noreferrer"
+                                                                    className="flex items-center justify-between p-2 rounded-lg bg-background hover:bg-muted border border-border text-xs group transition-all"
+                                                                >
+                                                                    <span className="truncate max-w-[80%] font-medium text-muted-foreground group-hover:text-foreground">
+                                                                        {file.fileName || `Attachment-${idx + 1}`}
+                                                                    </span>
+                                                                    <Download className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary shrink-0 ml-2" />
+                                                                </a>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
                                             </div>
-                                            <div className="grid gap-1.5">
-                                                {homework.attachments.map((file, idx) => (
-                                                    <a
-                                                        key={idx}
-                                                        href={getAttachmentUrl(file.fileUrl)}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="flex items-center justify-between p-2 rounded-lg bg-background hover:bg-muted border border-border text-xs group transition-all"
-                                                    >
-                                                        <span className="truncate max-w-[80%] font-medium text-muted-foreground group-hover:text-foreground">
-                                                            {file.fileName || `Attachment-${idx + 1}`}
-                                                        </span>
-                                                        <Download className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary shrink-0 ml-2" />
-                                                    </a>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
+                                        );
+                                    })()}
 
                                     {canModify(homework) && (
                                         <>

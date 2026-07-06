@@ -10,6 +10,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import * as Linking from "expo-linking";
 import * as WebBrowser from "expo-web-browser";
+import PdfPreview from "./PdfPreview";
 
 interface Attachment {
   _id?: string;
@@ -32,21 +33,22 @@ const AttachmentViewer: React.FC<AttachmentViewerProps> = ({
   const openFile = async (filePath: string, fileName: string) => {
     try {
       const fileExtension = filePath.split(".").pop()?.toLowerCase() || "";
-      const isDoc = ["pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx", "txt"].includes(fileExtension);
       
-      if (isDoc) {
+      // If it is a PDF file, open it using native PdfPreview modal
+      if (fileExtension === "pdf") {
         setSelectedDoc({ fileName, fileUrl: filePath });
         setViewerVisible(true);
         return;
       }
 
+      // Other document and media files
       const baseUrl = process.env.EXPO_PUBLIC_API_BASE_FILEURL || 
                       process.env.EXPO_PUBLIC_API_BASE_URL?.replace("/api", "") || 
                       "http://192.168.31.144:5000";
-      const url = `${baseUrl}/${filePath}`;
+      const url = filePath.startsWith("http") ? filePath : `${baseUrl}/${filePath}`;
       
       let fileUrlToOpen = url;
-      if (fileExtension && ["pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx"].includes(fileExtension)) {
+      if (fileExtension && ["doc", "docx", "xls", "xlsx", "ppt", "pptx"].includes(fileExtension)) {
         fileUrlToOpen = `https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(url)}`;
       }
       
@@ -139,6 +141,24 @@ const AttachmentViewer: React.FC<AttachmentViewerProps> = ({
               />
             </TouchableOpacity>
           )}
+        />
+      )}
+
+      {/* Render the controlled PDF Preview modal */}
+      {viewerVisible && selectedDoc && (
+        <PdfPreview
+          visible={viewerVisible}
+          onRequestClose={() => {
+            setViewerVisible(false);
+            setSelectedDoc(null);
+          }}
+          fileUrl={selectedDoc.fileUrl.startsWith("http") ? selectedDoc.fileUrl : (() => {
+            const baseUrl = process.env.EXPO_PUBLIC_API_BASE_FILEURL || 
+                            process.env.EXPO_PUBLIC_API_BASE_URL?.replace("/api", "") || 
+                            "http://192.168.31.144:5000";
+            return `${baseUrl}/${selectedDoc.fileUrl}`;
+          })()}
+          fileName={selectedDoc.fileName}
         />
       )}
     </View>
