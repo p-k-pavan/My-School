@@ -140,6 +140,7 @@ export default function Login() {
                             className="h-auto p-0 text-sm font-normal text-muted-foreground hover:text-primary text-end cursor-pointer"
                             type="button"
                             disabled={isLoading}
+                            onClick={() => navigate("/forgot-password")}
                         >
                             Forgot Password?
                         </Button>

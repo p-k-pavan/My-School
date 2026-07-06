@@ -1,5 +1,6 @@
 import { Route, Routes } from 'react-router-dom'
 import Login from './pages/auth/Login'
+import ForgotPassword from './pages/auth/ForgotPassword'
 import DashBoard from "./pages/dashboard"
 import ProtectedRoute from './layout/ProtectedRoute'
 import RedirectIfAuthenticated from './layout/RedirectIfAuthenticated'
@@ -25,6 +26,7 @@ function App() {
 
           <Route element={<RedirectIfAuthenticated />}>
             <Route path="/" element={<Login />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
           </Route>
 
           <Route element={<ProtectedRoute />}>

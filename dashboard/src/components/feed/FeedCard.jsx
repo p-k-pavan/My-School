@@ -196,18 +196,18 @@ export default function FeedCard({ feed, role, currentUserId, onEdit, onDelete, 
                             {media.length > 0 && (
                                 <div className="space-y-2">
                                     {media.map((file, idx) => (
-                                        <div key={idx} className="rounded-lg overflow-hidden border border-border bg-black/5 dark:bg-white/5 max-h-[400px] flex items-center justify-center">
+                                        <div key={idx} className="rounded-lg overflow-hidden border border-border bg-black/5 dark:bg-white/5 max-h-100 flex items-center justify-center">
                                             {file.fileType === "image" ? (
                                                 <img
                                                     src={getAttachmentUrl(file.fileUrl)}
                                                     alt={file.fileName}
-                                                    className="max-h-[400px] w-auto object-contain hover:scale-[1.01] transition-transform duration-200"
+                                                    className="max-h-100 w-auto object-contain hover:scale-[1.01] transition-transform duration-200"
                                                 />
                                             ) : (
                                                 <video
                                                     src={getAttachmentUrl(file.fileUrl)}
                                                     controls
-                                                    className="max-h-[400px] w-full object-contain"
+                                                    className="max-h-100 w-full object-contain"
                                                 />
                                             )}
                                         </div>
