@@ -7,6 +7,7 @@ import { User } from "../models/user.model.js";
 import AppError from "../utils/AppError.js";
 import asyncHandler from "../middleware/asyncHandler.js";
 import { Parent } from "../models/parent.model.js";
+import { createAuditLog } from "./auditLog.controller.js";
 
 
 export const getAllStudents = asyncHandler(async (req, res) => {
@@ -82,6 +83,13 @@ export const getStudentById = asyncHandler(async (req, res) => {
         throw new AppError("Student not found", 404);
     }
 
+    if (req.user.role === "parent") {
+        const parent = await Parent.findOne({ userId: req.user.id });
+        if (!parent || student.parentId._id.toString() !== parent._id.toString()) {
+            throw new AppError("Access denied. You can only view your own children", 403);
+        }
+    }
+
     res.status(200).json({
         success: true,
         message: "Student fetched successfully",
@@ -102,8 +110,17 @@ export const changeStudentStatus = asyncHandler(async (req, res) => {
 
     await student.save();
 
-    await User.findByIdAndUpdate(student.userId, {
-        status: student.status,
+    createAuditLog({
+        userId: req.user.id,
+        role: req.user.role,
+        module: "student",
+        action: "update",
+        entityId: student._id,
+        entityType: "Student",
+        title: "Student Status Changed",
+        description: `Student ${student.studentName} status set to ${student.status}`,
+        ipAddress: req.ip || req.headers["x-forwarded-for"] || req.socket.remoteAddress,
+        userAgent: req.headers["user-agent"],
     });
 
     res.status(200).json({
@@ -145,6 +162,13 @@ export const getStudentsByParent = asyncHandler(async (req, res) => {
 
     if (!mongoose.Types.ObjectId.isValid(parentId)) {
         throw new AppError("Invalid parent ID", 400);
+    }
+
+    if (req.user.role === "parent") {
+        const parent = await Parent.findOne({ userId: req.user.id });
+        if (!parent || parent._id.toString() !== parentId) {
+            throw new AppError("Access denied. You can only view your own children", 403);
+        }
     }
 
     const students = await Student.find({ parentId })
@@ -314,6 +338,19 @@ export const updateStudent = asyncHandler(async (req, res) => {
                 "parentId",
                 "fatherName motherName phoneNumber"
             );
+
+    createAuditLog({
+        userId: req.user.id,
+        role: req.user.role,
+        module: "student",
+        action: "update",
+        entityId: student._id,
+        entityType: "Student",
+        title: "Student Updated",
+        description: `Student ${student.studentName} details updated`,
+        ipAddress: req.ip || req.headers["x-forwarded-for"] || req.socket.remoteAddress,
+        userAgent: req.headers["user-agent"],
+    });
 
     res.status(200).json({
         success: true,

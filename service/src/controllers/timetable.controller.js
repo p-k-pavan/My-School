@@ -131,7 +131,7 @@ export const handleTimetableNotificationAsync = (timetable, action, actorId) => 
                     type: "timetable",
                     timetableId: timetable._id.toString(),
                     notificationId: notification._id.toString(),
-                    day,
+                    day: timetable.day,
                     action,
                 },
 
@@ -212,6 +212,17 @@ export const getTimetableByClass = asyncHandler(async (req, res) => {
 
     if (!academicYear) {
         throw new AppError("Academic year query parameter is required", 400);
+    }
+
+    if (req.user.role === "parent") {
+        const parent = await Parent.findOne({ userId: req.user.id });
+        if (!parent) {
+            throw new AppError("Parent profile not found", 404);
+        }
+        const studentExists = await Student.exists({ classId, parentId: parent._id });
+        if (!studentExists) {
+            throw new AppError("Access denied. You do not have a child enrolled in this class", 403);
+        }
     }
 
     const query = {

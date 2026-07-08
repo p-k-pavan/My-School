@@ -106,15 +106,13 @@ export const updateSubject = asyncHandler(async (req, res) => {
     const finalSubjectCode = subjectCode ? subjectCode.toUpperCase().trim() : subject.subjectCode;
 
     if (subjectCode) {
-
         const duplicateSubject = await Subject.findOne({
-            classId: finalClassId,
             subjectCode: finalSubjectCode,
             _id: { $ne: id },
         });
 
         if (duplicateSubject) {
-            throw new AppError(`Subject with code '${finalSubjectCode}' already exists for this class`, 409);
+            throw new AppError(`Subject with code '${finalSubjectCode}' already exists`, 409);
         }
     }
 

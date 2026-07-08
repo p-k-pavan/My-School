@@ -125,6 +125,10 @@ export const getParentById = asyncHandler(async (req, res) => {
         throw new AppError("Parent not found", 404);
     }
 
+    if (req.user.role === "parent" && parent.userId.toString() !== req.user.id.toString()) {
+        throw new AppError("Access denied. You can only view your own profile", 403);
+    }
+
     res.status(200).json({
         success: true,
         message: "Parent fetched successfully",
@@ -137,6 +141,10 @@ export const getParentByUserId = asyncHandler(async (req, res) => {
 
     if (!mongoose.Types.ObjectId.isValid(userId)) {
         throw new AppError("Invalid Parent ID", 400);
+    }
+
+    if (req.user.role === "parent" && userId !== req.user.id.toString()) {
+        throw new AppError("Access denied. You can only view your own profile", 403);
     }
 
     const parent = await Parent.findOne({userId})

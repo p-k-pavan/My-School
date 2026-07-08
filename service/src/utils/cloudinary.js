@@ -18,13 +18,13 @@ export const uploadToCloudinary = async (filePath, folder = "my-school") => {
       resource_type: "auto",
     });
     if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
+      await fs.promises.unlink(filePath).catch(err => console.error("Cloudinary unlink failed:", err));
     }
     return response;
   } catch (error) {
     console.error("Cloudinary upload failed:", error);
     if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
+      await fs.promises.unlink(filePath).catch(err => console.error("Cloudinary unlink failed:", err));
     }
     throw error;
   }

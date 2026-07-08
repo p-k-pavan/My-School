@@ -1,8 +1,12 @@
 import XLSX from "xlsx";
 import fs from "fs";
+import mongoose from "mongoose";
 import asyncHandler from "../middleware/asyncHandler.js";
 import { Class } from "../models/class.model.js";
 import AppError from "../utils/AppError.js";
+import { Student } from "../models/student.model.js";
+import Timetable from "../models/timetable.model.js";
+import { Homework } from "../models/homework.model.js";
 
 export const createClass = asyncHandler(async (req, res) => {
   const { className, section, classTeacher } = req.body;
@@ -233,6 +237,26 @@ export const updateClass = asyncHandler(async (req, res) => {
 
 export const deleteClass = asyncHandler(async (req, res) => {
   const { id } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    throw new AppError("Invalid Class ID", 400);
+  }
+
+  const studentExists = await Student.exists({ classId: id });
+  if (studentExists) {
+    throw new AppError("Cannot delete class because students are currently assigned to it", 400);
+  }
+
+  const timetableExists = await Timetable.exists({ classId: id });
+  if (timetableExists) {
+    throw new AppError("Cannot delete class because timetable schedules are assigned to it", 400);
+  }
+
+  const homeworkExists = await Homework.exists({ classId: id });
+  if (homeworkExists) {
+    throw new AppError("Cannot delete class because homework is assigned to it", 400);
+  }
+
   const klass = await Class.findByIdAndDelete(id)
 
   if (!klass) {

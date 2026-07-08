@@ -6,6 +6,7 @@ import { User } from "../models/user.model.js";
 import { generatePassword } from "../utils/genaratePassword.js";
 import { Class } from "../models/class.model.js";
 import mongoose from "mongoose";
+import { createAuditLog } from "./auditLog.controller.js";
 
 export const createTeacher = asyncHandler(async (req, res) => {
     const {
@@ -100,6 +101,19 @@ export const createTeacher = asyncHandler(async (req, res) => {
             message:
                 "Teacher created successfully",
             teacher: newTeacher,
+        });
+
+        createAuditLog({
+            userId: req.user.id,
+            role: req.user.role,
+            module: "teacher",
+            action: "create",
+            entityId: newTeacher._id,
+            entityType: "Teacher",
+            title: "Teacher Created",
+            description: `Teacher ${newTeacher.teacherName} (Employee ID: ${newTeacher.employeeId}) created successfully`,
+            ipAddress: req.ip || req.headers["x-forwarded-for"] || req.socket.remoteAddress,
+            userAgent: req.headers["user-agent"],
         });
     } catch (error) {
         if (newUser) {
@@ -318,6 +332,10 @@ export const getTeacherByUserId = asyncHandler(async (req, res) => {
         throw new AppError("Invalid User ID", 400);
     }
 
+    if (req.user.role === "teacher" && userId !== req.user.id.toString()) {
+        throw new AppError("Access denied. You can only view your own profile", 403);
+    }
+
     const teacher = await Teacher.findOne({ userId })
         .populate("assignedClasses", "className section");
 
@@ -390,6 +408,19 @@ export const updateTeacher = asyncHandler(
                 "Teacher updated successfully",
             teacher,
         });
+
+        createAuditLog({
+            userId: req.user.id,
+            role: req.user.role,
+            module: "teacher",
+            action: "update",
+            entityId: teacher._id,
+            entityType: "Teacher",
+            title: "Teacher Updated",
+            description: `Teacher ${teacher.teacherName} profile details updated`,
+            ipAddress: req.ip || req.headers["x-forwarded-for"] || req.socket.remoteAddress,
+            userAgent: req.headers["user-agent"],
+        });
     }
 );
 
@@ -437,6 +468,19 @@ export const changeTeacherStatus = asyncHandler(
                 : "deactivated"
                 } successfully`,
             teacher,
+        });
+
+        createAuditLog({
+            userId: req.user.id,
+            role: req.user.role,
+            module: "teacher",
+            action: "update",
+            entityId: teacher._id,
+            entityType: "Teacher",
+            title: "Teacher Status Changed",
+            description: `Teacher ${teacher.teacherName} status set to ${teacher.status}`,
+            ipAddress: req.ip || req.headers["x-forwarded-for"] || req.socket.remoteAddress,
+            userAgent: req.headers["user-agent"],
         });
     }
 );
@@ -531,6 +575,10 @@ export const removeClassFromTeacher = asyncHandler(async (req, res) => {
 export const getTeacherClasses = asyncHandler(async (req, res) => {
     const { id } = req.params;
 
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+        throw new AppError("Invalid Teacher ID", 400);
+    }
+
     const teacher =
         await Teacher.findById(id)
             .populate(
@@ -540,6 +588,10 @@ export const getTeacherClasses = asyncHandler(async (req, res) => {
 
     if (!teacher) {
         throw new AppError("Teacher not found", 404);
+    }
+
+    if (req.user.role === "teacher" && teacher.userId.toString() !== req.user.id.toString()) {
+        throw new AppError("Access denied. You can only view your own assigned classes", 403);
     }
 
     res.status(200).json({

@@ -450,14 +450,14 @@ export const getStudentHomework = asyncHandler(async (req, res) => {
         throw new AppError("Student not found", 404);
     }
 
-    if (
-        req.user.role === "parent" &&
-        student.parentId.toString() !== req.user.id.toString()
-    ) {
-        throw new AppError(
-            "You are not authorized to access this student",
-            403
-        );
+    if (req.user.role === "parent") {
+        const parent = await Parent.findOne({ userId: req.user.id });
+        if (!parent || student.parentId.toString() !== parent._id.toString()) {
+            throw new AppError(
+                "You are not authorized to access this student",
+                403
+            );
+        }
     }
 
     const filter = {

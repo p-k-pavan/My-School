@@ -5,6 +5,8 @@ import bcrypt from "bcryptjs"
 import { generateToken } from "../utils/generateToken.js";
 import generatedOtp from "../utils/generatedOTP.js";
 import sendMail from "../config/sendMail.js";
+import { createAuditLog } from "./auditLog.controller.js";
+import jwt from "jsonwebtoken";
 
 export const login = asyncHandler(async (req, res) => {
     const { email, password } = req.body;
@@ -30,6 +32,17 @@ export const login = asyncHandler(async (req, res) => {
 
     const token = generateToken(user._id, user.role);
 
+    createAuditLog({
+        userId: user._id,
+        role: user.role,
+        module: "auth",
+        action: "login",
+        title: "User Login",
+        description: `User ${user.email} logged in successfully`,
+        ipAddress: req.ip || req.headers["x-forwarded-for"] || req.socket.remoteAddress,
+        userAgent: req.headers["user-agent"],
+    });
+
     res
         .status(200)
         .cookie("token", token, {
@@ -52,6 +65,28 @@ export const login = asyncHandler(async (req, res) => {
 });
 
 export const logout = asyncHandler(async (req, res) => {
+    let token = req.cookies.token;
+    if (!token && req.headers.authorization && req.headers.authorization.startsWith("Bearer ")) {
+      token = req.headers.authorization.split(" ")[1];
+    }
+    if (token) {
+        try {
+            const decoded = jwt.verify(token, process.env.JWT_SECRET);
+            createAuditLog({
+                userId: decoded.id,
+                role: decoded.role,
+                module: "auth",
+                action: "logout",
+                title: "User Logout",
+                description: "User logged out successfully",
+                ipAddress: req.ip || req.headers["x-forwarded-for"] || req.socket.remoteAddress,
+                userAgent: req.headers["user-agent"],
+            });
+        } catch (err) {
+            // ignore verify error for logging
+        }
+    }
+
     res
         .cookie("token", "", {
             httpOnly: true,
@@ -119,6 +154,17 @@ export const changePassword = asyncHandler(
         user.password = hashedPassword;
 
         await user.save();
+
+        createAuditLog({
+            userId: user._id,
+            role: user.role,
+            module: "user",
+            action: "update",
+            title: "Password Changed",
+            description: "User changed password",
+            ipAddress: req.ip || req.headers["x-forwarded-for"] || req.socket.remoteAddress,
+            userAgent: req.headers["user-agent"],
+        });
 
         res.status(200).json({
             success: true,
@@ -231,6 +277,17 @@ export const resetPassword = asyncHandler(async (req, res) => {
     user.resetPasswordOtpExpires = undefined;
     user.isResetOtpVerified = false;
     await user.save();
+
+    createAuditLog({
+        userId: user._id,
+        role: user.role,
+        module: "user",
+        action: "update",
+        title: "Password Reset",
+        description: "User password reset via OTP",
+        ipAddress: req.ip || req.headers["x-forwarded-for"] || req.socket.remoteAddress,
+        userAgent: req.headers["user-agent"],
+    });
 
     res.status(200).json({
         success: true,

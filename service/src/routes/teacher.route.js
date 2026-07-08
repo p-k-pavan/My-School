@@ -84,6 +84,7 @@ router.put(
 router.get(
     "/:id/classes",
     isAuthenticated,
+    authorizeRoles("admin", "management", "teacher"),
     getTeacherClasses
 );
 

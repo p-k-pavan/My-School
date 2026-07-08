@@ -109,64 +109,71 @@ export const handleAttendanceNotificationAsync = (attendanceRecord, classId) => 
                 parentMap.set(parent._id.toString(), parent);
             });
 
+            const notificationsToCreate = [];
+            const pushNotificationsToSend = [];
+
             for (const item of notifyList) {
-
-                const student = studentMap.get(
-                    item.studentId.toString()
-                );
-
+                const student = studentMap.get(item.studentId.toString());
                 if (!student) continue;
 
-                const parent = parentMap.get(
-                    student.parentId.toString()
-                );
-
+                const parent = parentMap.get(student.parentId.toString());
                 if (!parent) continue;
 
                 let title = "";
                 let description = "";
 
                 switch (item.status) {
-
                     case "A":
                         title = "Student Absent";
                         description = `${student.studentName} has been marked absent on ${attendanceDate}.`;
                         break;
-
                     case "L":
                         title = "Student Late";
                         description = `${student.studentName} arrived late on ${attendanceDate}.`;
                         break;
-
                     case "HD":
                         title = "Half Day Attendance";
                         description = `${student.studentName} has been marked as Half Day on ${attendanceDate}.`;
                         break;
                 }
 
-                const notification =
-                    await Notification.create({
-                        title,
-                        description,
-                        type: "attendance",
-                        receiverType: "individual_users",
-                        receiverIds: [parent.userId],
-                        entityId: attendanceRecord._id,
-                        createdBy: attendanceRecord.markedBy,
-                    });
-
-                sendPushNotificationsAsync({
+                notificationsToCreate.push({
                     title,
-                    body: description,
-                    userIds: [parent.userId.toString()],
-                    data: {
-                        type: "attendance",
-                        attendanceId: attendanceRecord._id.toString(),
-                        notificationId: notification._id.toString(),
-                        studentId: item.studentId.toString(),
-                        status: item.status,
-                        action: "mark",
-                    },
+                    description,
+                    type: "attendance",
+                    receiverType: "individual_users",
+                    receiverIds: [parent.userId],
+                    entityId: attendanceRecord._id,
+                    createdBy: attendanceRecord.markedBy,
+                });
+
+                pushNotificationsToSend.push({
+                    title,
+                    description,
+                    userId: parent.userId.toString(),
+                    studentId: item.studentId.toString(),
+                    status: item.status,
+                });
+            }
+
+            if (notificationsToCreate.length > 0) {
+                const createdNotifications = await Notification.insertMany(notificationsToCreate);
+
+                pushNotificationsToSend.forEach((push, idx) => {
+                    const notificationId = createdNotifications[idx]?._id?.toString() || "";
+                    sendPushNotificationsAsync({
+                        title: push.title,
+                        body: push.description,
+                        userIds: [push.userId],
+                        data: {
+                            type: "attendance",
+                            attendanceId: attendanceRecord._id.toString(),
+                            notificationId,
+                            studentId: push.studentId,
+                            status: push.status,
+                            action: "mark",
+                        },
+                    });
                 });
             }
 
