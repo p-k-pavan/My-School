@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { PlusCircle, Edit3, Loader2, X, Upload, Search, Check } from "lucide-react";
 import { feedSchema } from "@/schemas/feed.schema";
+import { getLocalDateString } from "@/lib/utils";
 
 import {
     Dialog,
@@ -468,7 +469,7 @@ export default function FeedDialog({ open, onClose, feedData }) {
                                 onChange={(e) => updateField("expiresAt", e.target.value)}
                                 className="w-full bg-background"
                                 disabled={isLoading}
-                                min={new Date().toISOString().split("T")[0]}
+                                min={getLocalDateString()}
                             />
                         </Field>
 

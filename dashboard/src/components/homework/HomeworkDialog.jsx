@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { Loader2, Upload, FileText, X } from "lucide-react";
 import { homeworkSchema } from "@/schemas/homework.schema";
+import { getLocalDateString } from "@/lib/utils";
 
 import {
     Dialog,
@@ -80,7 +81,7 @@ export default function HomeworkDialog({ open, onClose, homeworkData, defaultCla
                     description: "",
                     classId: defaultClassId || "",
                     subjectId: "",
-                    assignedDate: defaultAssignedDate || new Date().toISOString().split("T")[0],
+                    assignedDate: defaultAssignedDate || getLocalDateString(),
                     dueDate: "",
                 });
                 setExistingAttachments([]);

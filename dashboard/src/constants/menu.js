@@ -95,12 +95,12 @@ export const menus = [
     roles: ["management", "admin"],
   },
 
-  {
-    name: "Transport",
-    path: "/transport",
-    icon: LuBus,
-    roles: ["management", "admin"],
-  },
+  // {
+  //   name: "Transport",
+  //   path: "/transport",
+  //   icon: LuBus,
+  //   roles: ["management", "admin"],
+  // },
 
   {
     name: "Announcements",

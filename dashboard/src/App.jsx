@@ -19,6 +19,7 @@ const Timetable = lazy(() => import('./pages/Timetable'))
 const Homework = lazy(() => import('./pages/Homework'))
 const Fees = lazy(() => import('./pages/Fees'))
 const Feed = lazy(() => import('./pages/Feed'))
+const Profile = lazy(() => import('./pages/Profile'))
 
 const LoadingFallback = () => (
   <div className="flex min-h-75 w-full items-center justify-center p-8">
@@ -55,6 +56,7 @@ function App() {
               <Route path="/homework" element={<Homework />} />
               <Route path="/fees" element={<Fees />} />
               <Route path="/feed" element={<Feed />} />
+              <Route path="/profile" element={<Profile />} />
             </Route>
 
           </Routes>

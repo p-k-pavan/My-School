@@ -4,6 +4,7 @@ import { ClipboardCheck, History, TrendingUp, Loader2, Calendar } from "lucide-r
 import { useSelector } from "react-redux";
 
 import PageHeading from "@/layout/PageHeading";
+import { getLocalDateString } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import {
     Select,
@@ -28,10 +29,7 @@ export default function Attendance() {
 
     
     const [selectedClass, setSelectedClass] = useState("");
-    const [selectedDate, setSelectedDate] = useState(() => {
-        const today = new Date();
-        return today.toISOString().split("T")[0]; 
-    });
+    const [selectedDate, setSelectedDate] = useState(() => getLocalDateString());
     const [viewMode, setViewMode] = useState("mark");
 
 
@@ -112,7 +110,7 @@ export default function Attendance() {
     const handleEditExisting = () => {
         if (!dailyLog) return;
 
-        const today = new Date().toISOString().split("T")[0];
+        const today = getLocalDateString();
 
     if (selectedDate !== today) {
         toast.error("Attendance can only be edited for today's date");

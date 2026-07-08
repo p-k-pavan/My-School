@@ -4,6 +4,7 @@ import { BookOpen, Plus, Loader2, Edit2, Trash2, Download, Calendar, User, FileT
 import { useSelector } from "react-redux";
 
 import PageHeading from "@/layout/PageHeading";
+import { getLocalDateString } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -24,7 +25,7 @@ export default function Homework() {
     const canAssign = ["admin", "management", "teacher"].includes(user?.role);
 
     const [selectedClassId, setSelectedClassId] = useState("");
-    const [assignedDate, setAssignedDate] = useState(() => new Date().toISOString().split("T")[0]);
+    const [assignedDate, setAssignedDate] = useState(() => getLocalDateString());
     const [searchQuery, setSearchQuery] = useState("");
 
     const [openDialog, setOpenDialog] = useState(false);
@@ -256,18 +257,18 @@ export default function Homework() {
                                                 {media.length > 0 && (
                                                     <div className="space-y-2">
                                                         {media.map((file, idx) => (
-                                                            <div key={idx} className="rounded-lg overflow-hidden border border-border bg-black/5 dark:bg-white/5 max-h-[300px] flex items-center justify-center">
+                                                            <div key={idx} className="rounded-lg overflow-hidden border border-border bg-black/5 dark:bg-white/5 max-h-75 flex items-center justify-center">
                                                                 {file.fileType === "image" ? (
                                                                     <img
                                                                         src={getAttachmentUrl(file.fileUrl)}
                                                                         alt={file.fileName}
-                                                                        className="max-h-[300px] w-auto object-contain"
+                                                                        className="max-h-75 w-auto object-contain"
                                                                     />
                                                                 ) : (
                                                                     <video
                                                                         src={getAttachmentUrl(file.fileUrl)}
                                                                         controls
-                                                                        className="max-h-[300px] w-full object-contain"
+                                                                        className="max-h-75 w-full object-contain"
                                                                     />
                                                                 )}
                                                             </div>
