@@ -179,7 +179,7 @@ export default function Attendance() {
         calendarCells.push({ dayNum: day, dateStr, dayOfWeek });
     }
 
-    const todayStr = new Date().toISOString().split("T")[0];
+    const todayStr = getLocalDateString(new Date());
 
     const selectedRecord = selectedDateStr ? recordsMap.get(selectedDateStr) : null;
     const selectedCell = calendarCells.find(c => c.dateStr === selectedDateStr);

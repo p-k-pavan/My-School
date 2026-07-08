@@ -29,25 +29,25 @@ const DRAWER_WIDTH = Math.min(width * 1, 500);
 
 const QUICK_LINKS = [
   { label: "Homework", icon: <Entypo name="open-book" size={22} color="#1E88E5" />, bg: "bg-blue-50", route: "/dashboard/homework", roles: ["parent", "teacher"] },
-  { label: "Calendar", icon: <FontAwesome name="calendar" size={22} color="#7C3AED" />, bg: "bg-violet-50", route: "/dashboard/calendar", roles: ["parent", "teacher"] },
-  { label: "Gallery", icon: <FontAwesome name="photo" size={22} color="#D97706" />, bg: "bg-amber-50", route: "/dashboard/gallery", roles: ["parent", "teacher"] },
+  // { label: "Calendar", icon: <FontAwesome name="calendar" size={22} color="#7C3AED" />, bg: "bg-violet-50", route: "/dashboard/calendar", roles: ["parent", "teacher"] },
+  // { label: "Gallery", icon: <FontAwesome name="photo" size={22} color="#D97706" />, bg: "bg-amber-50", route: "/dashboard/gallery", roles: ["parent", "teacher"] },
 ];
 
 const CLASSROOM_LINKS = [
   { label: "Attendance", icon: <MaterialIcons name="how-to-reg" size={22} color="#16A34A" />, bg: "bg-green-50", route: "/dashboard/attendance", roles: ["parent"] },
-  { label: "Progress Card", icon: <Ionicons name="stats-chart" size={22} color="#DC2626" />, bg: "bg-red-50", route: "/dashboard/progress", roles: ["parent"] },
+  // { label: "Progress Card", icon: <Ionicons name="stats-chart" size={22} color="#DC2626" />, bg: "bg-red-50", route: "/dashboard/progress", roles: ["parent"] },
   { label: "Time Table", icon: <MaterialIcons name="table-chart" size={22} color="#0891B2" />, bg: "bg-cyan-50", route: "/dashboard/timetable", roles: ["parent", "teacher"] },
-  { label: "Online Test", icon: <MaterialIcons name="quiz" size={22} color="#7C3AED" />, bg: "bg-violet-50", route: "/dashboard/test", roles: ["parent", "teacher"] },
-  { label: "E-Books", icon: <FontAwesome5 name="book-reader" size={20} color="#D97706" />, bg: "bg-amber-50", route: "/dashboard/ebooks", roles: ["parent", "teacher"] },
+  // { label: "Online Test", icon: <MaterialIcons name="quiz" size={22} color="#7C3AED" />, bg: "bg-violet-50", route: "/dashboard/test", roles: ["parent", "teacher"] },
+  // { label: "E-Books", icon: <FontAwesome5 name="book-reader" size={20} color="#D97706" />, bg: "bg-amber-50", route: "/dashboard/ebooks", roles: ["parent", "teacher"] },
   { label: "Fee", icon: <FontAwesome6 name="money-bill" size={20} color="#16A34A" />, bg: "bg-green-50", route: "/dashboard/fee", roles: ["parent"] },
 ];
 
-const COMMUNICATION_LINKS = [
-  { label: "SMS", icon: <MaterialIcons name="sms" size={22} color="#1E88E5" />, bg: "bg-blue-50", route: "/dashboard/sms", roles: ["parent", "teacher"] },
-  { label: "Email", icon: <MaterialIcons name="email" size={22} color="#7C3AED" />, bg: "bg-violet-50", route: "/dashboard/email", roles: ["parent", "teacher"] },
-  { label: "Notices", icon: <FontAwesome6 name="bullhorn" size={20} color="#0891B2" />, bg: "bg-cyan-50", route: "/dashboard/circular", roles: ["parent", "teacher"] },
-  { label: "Feedback", icon: <MaterialIcons name="feedback" size={22} color="#D97706" />, bg: "bg-amber-50", route: "/dashboard/feedback", roles: ["parent", "teacher"] },
-  { label: "Support", icon: <MaterialIcons name="contact-support" size={22} color="#DC2626" />, bg: "bg-red-50", route: "/dashboard/support", roles: ["parent", "teacher"] },
+const COMMUNICATION_LINKS: any[] = [
+  // { label: "SMS", icon: <MaterialIcons name="sms" size={22} color="#1E88E5" />, bg: "bg-blue-50", route: "/dashboard/sms", roles: ["parent", "teacher"] },
+  // { label: "Email", icon: <MaterialIcons name="email" size={22} color="#7C3AED" />, bg: "bg-violet-50", route: "/dashboard/email", roles: ["parent", "teacher"] },
+  // { label: "Notices", icon: <FontAwesome6 name="bullhorn" size={20} color="#0891B2" />, bg: "bg-cyan-50", route: "/dashboard/circular", roles: ["parent", "teacher"] },
+  // { label: "Feedback", icon: <MaterialIcons name="feedback" size={22} color="#D97706" />, bg: "bg-amber-50", route: "/dashboard/feedback", roles: ["parent", "teacher"] },
+  // { label: "Support", icon: <MaterialIcons name="contact-support" size={22} color="#DC2626" />, bg: "bg-red-50", route: "/dashboard/support", roles: ["parent", "teacher"] },
 ];
 
 function SectionHeader({ icon, label }: { icon: React.ReactNode; label: string }) {

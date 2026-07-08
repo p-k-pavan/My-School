@@ -9,6 +9,7 @@ import { Ionicons, FontAwesome6 } from "@expo/vector-icons";
 import { router, Redirect } from "expo-router";
 import AttachmentViewer from "@/components/shared/AttachmentViewer";
 import Skeleton from "@/components/shared/Skeleton";
+import { getLocalDateString } from "@/utils/date";
 
 const SUBJECT_STYLING: Record<string, { bg: string; color: string; icon: string }> = {
   KANNADA: { bg: "bg-amber-50", color: "#D97706", icon: "book-open" },
@@ -50,14 +51,14 @@ const formatHeaderDate = (dateStr: string) => {
       "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
     ];
     
-    const today = new Date().toISOString().split("T")[0];
+    const today = getLocalDateString();
     if (dateStr === today) {
       return `Today, ${d.getDate()} ${months[d.getMonth()]}`;
     }
     
     const yesterdayDate = new Date();
     yesterdayDate.setDate(yesterdayDate.getDate() - 1);
-    const yesterday = yesterdayDate.toISOString().split("T")[0];
+    const yesterday = getLocalDateString(yesterdayDate);
     if (dateStr === yesterday) {
       return `Yesterday, ${d.getDate()} ${months[d.getMonth()]}`;
     }
@@ -87,7 +88,7 @@ export default function AllHomework() {
   const student = parentData?.parent?.studentIds?.[0];
   const classId = student?.classId?._id;
 
-  const [assignedDate, setAssignedDate] = useState(() => new Date().toISOString().split("T")[0]);
+  const [assignedDate, setAssignedDate] = useState(() => getLocalDateString());
 
   const { data: hwData, isLoading: isHomeworkLoading } = useGetHomeworkByClassQuery(
     { classId, assigned: assignedDate },
@@ -112,7 +113,7 @@ export default function AllHomework() {
   const changeDate = (days: number) => {
     const d = new Date(assignedDate);
     d.setDate(d.getDate() + days);
-    setAssignedDate(d.toISOString().split("T")[0]);
+    setAssignedDate(getLocalDateString(d));
   };
 
   const displayName = isTeacher

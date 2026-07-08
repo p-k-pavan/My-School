@@ -14,6 +14,7 @@ import { useGetTimetableByClassQuery } from "@/redux/api/timetable";
 import { useState } from "react";
 import { useGetHomeworkByClassQuery } from "@/redux/api/homework";
 import { useGetTeacherByUserIdQuery } from "@/redux/api/teacher";
+import { getLocalDateString } from "@/utils/date";
 
 export default function Dashboard() {
   const user = useAppSelector((state) => state.auth.user);
@@ -23,7 +24,7 @@ export default function Dashboard() {
   }
 
   const [academicYear, setAcademicYear] = useState("2026-2027");
-  const [assignedDate, setAssignedDate] = useState(() => new Date().toISOString().split("T")[0]);
+  const [assignedDate, setAssignedDate] = useState(() => getLocalDateString());
 
   const isParent = (user as any)?.role === "parent";
   const isTeacher = (user as any)?.role === "teacher";

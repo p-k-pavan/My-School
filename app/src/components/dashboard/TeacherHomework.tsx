@@ -5,6 +5,7 @@ import { FontAwesome6, Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import AttachmentViewer from "../shared/AttachmentViewer";
 import Skeleton from "../shared/Skeleton";
+import { getLocalDateString } from "@/utils/date";
 
 interface TeacherHomeworkProps {
   assignedDate?: string;
@@ -41,7 +42,7 @@ const formatDate = (dateStr: string) => {
 };
 
 export default function TeacherHomework({ assignedDate }: TeacherHomeworkProps) {
-  const defaultDate = assignedDate || new Date().toISOString().split("T")[0];
+  const defaultDate = assignedDate || getLocalDateString();
   const { data, isLoading } = useGetHomeworkByTeacherQuery({ assigned: defaultDate });
   const homework = data?.homework || [];
 
