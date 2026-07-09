@@ -33,6 +33,7 @@ const app = express();
 const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:8081",
+  "https://school-dashboard-drab.vercel.app"
 ];
 
 app.use(cors({
@@ -42,7 +43,7 @@ app.use(cors({
     const isAllowed = allowedOrigins.includes(origin) ||
       /^http:\/\/localhost(:\d+)?$/.test(origin) ||
       /^http:\/\/192\.168\.\d{1,3}\.\d{1,3}(:\d+)?$/.test(origin) ||
-      /^http:\/\/10\.0\.2\.2(:\d+)?$/.test(origin);
+      /^http:\/\/10\.0\.2\.2(:\d+)?$/.test(origin) ;
 
     if (isAllowed) {
       callback(null, true);
