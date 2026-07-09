@@ -3,7 +3,6 @@
 # dependencies
 app/node_modules/
 service/node_modules/
-service/uploads/
 
 # Expo
 app/.expo/
