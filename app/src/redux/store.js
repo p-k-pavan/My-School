@@ -47,7 +47,7 @@ export const store = configureStore({
           "persist/REHYDRATE",
           "persist/REGISTER",
           "persist/FLUSH",
-          "persist/PAUSE",
+          "persist/PAUSE",          
           "persist/PURGE",
         ],
       },
